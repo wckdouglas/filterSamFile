@@ -220,10 +220,12 @@ int usage(char *program)
 	cerr << "****************************************************************" << '\n';
 	cerr << "Filtering soft clipped reads from paired-end RNA-seq sam files" << '\n';
 	cerr << "usage: cat <samFile> | " << program << " -s <oneSideSoftclipFractionThreshold> -b <bothEndSoftclippedThreshold> [-vp]" << "\n\n";
-	cerr << "<oneSideSoftclipFractionThreshold>" << "\t" << "Threshold for filtering one side softclip sequence. Must be between 0 and 1 [default: 0.3]" << "\n";
-	cerr << "<bothEndSoftclippedThreshold>" << "\t" << "Threshold for filtering both side softclip sequence. Must be between 0 and 1 [default: 0.4]" << "\n";
-	cerr << "-v" << "\t" << "Debugging mode: print out all failed alignments" << "\n";
-	cerr << "-p" << "\t" << "paired-end mode [default = single end]" << "\n";
+	cerr << "<oneSideSoftclipFractionThreshold>" << "\t" << "Threshold for filtering one side softclip sequence. "<< '\n';
+    cerr << "                                  " << "\t" << "Must be between 0 and 1 [default: 0.3]" << "\n";
+	cerr << "<bothEndSoftclippedThreshold>     " << "\t" << "Threshold for filtering both side softclip sequence. "<< '\n';
+    cerr << "                                  " << "\t" << "Must be between 0 and 1 [default: 0.4]" << "\n";
+	cerr << "-v                                " << "\t" << "Debugging mode: print out all failed alignments" << "\n";
+	cerr << "-p                                " << "\t" << "paired-end mode [default = single end]" << "\n";
 	cerr << "If the soft clipped bases count > (threshold * [whole sequence length]), it will be filter out" << '\n';
 	cerr << "****************************************************************\n";
     cerr << endl;
