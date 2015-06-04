@@ -14,6 +14,7 @@ This will make:
 ---
 1. filterSoftClipped
 
+```
     Filtering soft clipped reads from paired-end RNA-seq sam files
     usage: cat \<samFile\> \| ./filterSoftClipped -s \<oneSideSoftclipFractionThreshold\> -b \<bothEndSoftclippedThreshold\> \[-vp\]
     
@@ -22,4 +23,5 @@ This will make:
     -v                                    Debugging mode: print out all failed alignments
     -p                                    paired-end mode \[default = single end\]
     If the soft clipped bases count \> (threshold * [whole sequence length]), the alignment will be filter out
+```
 ---
