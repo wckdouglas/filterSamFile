@@ -122,7 +122,7 @@ int pairedEndProcessLine(string line, int lineno, int headerline, stringList &sa
     //headers 
     if (line.at(0) == '@')
     {
-        cout << line << '\n';
+        cout << line << endl;
         headerline ++;
     }
     else
@@ -159,13 +159,13 @@ int pairedEndProcessLine(string line, int lineno, int headerline, stringList &sa
             passFlagTotal = accumulate(passFlags.begin(),passFlags.end(),0);
             if (debugging == 0 && passFlagTotal == 2)
             {
-                cout << samlines[0] << '\n';
-                cout << samlines[1] << '\n';
+                cout << samlines[0] << endl;
+                cout << samlines[1] << endl;
             }
             else if (debugging == 1 && passFlagTotal < 2)
             {
-                cout << samlines[0] << '\n';
-                cout << samlines[1] << '\n';
+                cout << samlines[0] << endl;
+                cout << samlines[1] << endl;
             }
             stringList samlines(2);
             stringList ids(2);
@@ -185,33 +185,37 @@ int pairedStreamFile(double singleEndSoftclippedThreshold, double bothEndSoftcli
         lineno ++;
         pairedEndProcessLine(line, lineno, headerline, samlines, singleEndSoftclippedThreshold, bothEndSoftclippedThreshold, ids, debugging, passFlags);
     }
+	cerr << "Parsed " << lineno << " lines " << endl;
     return 0;
 }
 
 int singleStreamFile(double singleEndSoftclippedThreshold, double bothEndSoftclippedThreshold, int debugging)
 {
     int pass;
+	int lineno = 0;
     for ( string line ; getline(cin, line);)
     {
+		lineno ++;
         stringList columns;
         split(line,'\t',columns);
         if (line.at(0) == '@')
         {
-            cout << line << '\n';
+            cout << line << endl;
         }
         else
         {
             pass = filter(columns, singleEndSoftclippedThreshold, bothEndSoftclippedThreshold);
             if (pass != 0 && debugging == 0)
             {
-                cout << line << '\n';
+                cout << line << endl;
             }
             else if (pass == 0 && debugging == 1)
             {
-                cout << line << '\n';
+                cout << line << endl;
             }
         }
     }
+	cerr << "Parse " << lineno  << " lines" << endl;
     return 0;
 }
 
@@ -219,14 +223,15 @@ int usage(char *program)
 {
 	cerr << "****************************************************************" << '\n';
 	cerr << "Filtering soft clipped reads from paired-end RNA-seq sam files" << '\n';
-	cerr << "usage: cat <samFile> | " << program << " -s <oneSideSoftclipFractionThreshold> -b <bothEndSoftclippedThreshold> [-vp]" << "\n\n";
-	cerr << "<oneSideSoftclipFractionThreshold>" << "\t" << "Threshold for filtering one side softclip sequence. "<< '\n';
-    cerr << "                                  " << "\t" << "Must be between 0 and 1 [default: 0.3]" << "\n";
-	cerr << "<bothEndSoftclippedThreshold>     " << "\t" << "Threshold for filtering both side softclip sequence. "<< '\n';
-    cerr << "                                  " << "\t" << "Must be between 0 and 1 [default: 0.4]" << "\n";
-	cerr << "-v                                " << "\t" << "Debugging mode: print out all failed alignments" << "\n";
-	cerr << "-p                                " << "\t" << "paired-end mode [default = single end]" << "\n";
-	cerr << "If the soft clipped bases count > (threshold * [whole sequence length]), it will be filter out" << '\n';
+	cerr << "usage: cat <samFile> | " << program << " -s <oneSideSoftclipFractionThreshold> ";
+	cerr << "-b <bothEndSoftclippedThreshold> [-vp]" << "\n" << endl;
+	cerr << "<oneSideSoftclipFractionThreshold>" << "\t" << "Threshold for filtering one side softclip sequence. "<< endl;
+    cerr << "                                  " << "\t" << "Must be between 0 and 1 [default: 0.3]" << endl;
+	cerr << "<bothEndSoftclippedThreshold>     " << "\t" << "Threshold for filtering both side softclip sequence. "<< endl;
+    cerr << "                                  " << "\t" << "Must be between 0 and 1 [default: 0.4]" << endl;
+	cerr << "-v                                " << "\t" << "Debugging mode: print out all failed alignments" << endl;
+	cerr << "-p                                " << "\t" << "paired-end mode [default = single end]" << endl;
+	cerr << "If the soft clipped bases count > (threshold * [whole sequence length]), it will be filter out" << endl;
 	cerr << "****************************************************************\n";
     cerr << endl;
     exit(EXIT_FAILURE);
