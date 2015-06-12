@@ -27,10 +27,11 @@ int usage(char *argv[])
 
 
 //split function to split line with desired deliminator
-lists &split(const string &s, char delim, lists &result) 
+lists split(const string &s, char delim) 
 {
         stringstream ss(s);
         string item;
+		lists result;
         while (getline(ss, item, delim)) 
         {
                 result.push_back(item);
@@ -92,6 +93,7 @@ int printingTable(string transcriptID, string mispos, string ref, string correct
         {
             strand = '+';
             qual = baseQuals[i] - 33 ;
+			ios::sync_with_stdio(false);
             cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
             cout << read << "\t" << cov <<  "\t" << qual << "\t" ;
             cout << modifiedBase << endl;
@@ -170,11 +172,11 @@ int processLine( lists columns, seq_map seqIndex)
 // parse it line by line
 int readFile(const char* filename, seq_map seqIndex)
 {
+	ios::sync_with_stdio(false);
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
-        lists columns;
-        columns = split(line,'\t',columns);
+        lists columns = split(line,'\t');
         processLine(columns, seqIndex);
     }
     return 0;
@@ -185,10 +187,10 @@ int readFile(const char* filename, seq_map seqIndex)
 // parse it line by line
 int readStream(seq_map seqIndex)
 {
+	ios::sync_with_stdio(false);
     for (string line; getline(cin, line);)
     {
-        lists columns;
-        columns = split(line,'\t',columns);
+        lists columns = split(line,'\t');
         processLine(columns, seqIndex);
     }
     return 0;
@@ -196,6 +198,7 @@ int readStream(seq_map seqIndex)
 
 int printHeader()
 {
+	ios::sync_with_stdio(false);
     cout << "transcriptID" << "\t" ;
     cout << "mispos" << "\t";
     cout << "ref" << "\t";
@@ -225,9 +228,8 @@ int main(int argc, char *argv[])
     {
         if (line.at(0) == '>')
         {
-            lists seqid(0);
             id = line.erase(0,1);
-            seqid = split(id,' ',seqid);
+            lists seqid = split(id,' ');
             idList.push_back(seqid[0]);
         }
         else

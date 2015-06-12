@@ -6,8 +6,10 @@
 #include <ctype.h>
 #include <cstdlib>
 #include <fstream>
+#include <cassert>
 
 using namespace std;
+typedef vector<string> stringList;
 
 //print usage 
 int usage(char *argv[])
@@ -22,10 +24,11 @@ int usage(char *argv[])
 
 
 //split function to split line with desired deliminator
-vector<string> &split(const string &s, char delim, vector<string> &result) 
+stringList split(const string &s, char delim) 
 {
         stringstream ss(s);
         string item;
+		stringList result;
         while (getline(ss, item, delim)) 
         {
                 result.push_back(item);
@@ -72,6 +75,7 @@ int printingTable(string transcriptID, string mispos, string ref, string correct
         {
             strand = '+';
             qual = baseQuals[i] - 33 ;
+			ios::sync_with_stdio(false);
             cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
             cout << read << "\t" << cov <<  "\t" << qual << "\t" ;
             cout << strand << "\t" << start << "\t" << end << endl;
@@ -122,9 +126,9 @@ int extractMismatches(string reads, string baseQuals, int cov,
 
 // extract from each line different columns
 // and give them to further processing
-int processLine( vector<string> columns) 
+int processLine(stringList columns) 
 {
-    string transcriptID, pos,ref,reads,baseQuals;
+    string transcriptID, pos, ref, reads, baseQuals;
     int cov;
     if (columns.size() == 6) 
     {
@@ -136,12 +140,8 @@ int processLine( vector<string> columns)
             ref = columns[2];
             reads = columns[4];
             baseQuals = columns[5];
-            if ( baseQuals.length() != cov )
-            {
-                cout << "Wrongly parsed on quality!\n";
-                abort();
-            }
-           extractMismatches(reads,baseQuals,cov, transcriptID,pos,ref);
+            assert (baseQuals.length() == cov) ;
+			extractMismatches(reads,baseQuals,cov, transcriptID,pos,ref);
         }
     }
     return 0;
@@ -153,11 +153,11 @@ int processLine( vector<string> columns)
 // parse it line by line
 int readFile(const char* filename)
 {
+	ios::sync_with_stdio(false);
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
-        vector<string> columns;
-        columns = split(line,'\t',columns);
+        stringList columns = split(line,'\t');
         processLine(columns);
     }
     return 0;
@@ -168,10 +168,10 @@ int readFile(const char* filename)
 // parse it line by line
 int readStream()
 {
+	ios::sync_with_stdio(false);
     for (string line; getline(cin, line);)
     {
-        vector<string> columns;
-        columns = split(line,'\t',columns);
+        stringList columns = split(line,'\t');
         processLine(columns);
     }
     return 0;
