@@ -17,7 +17,7 @@ int usage(char *argv[])
     cerr << "Takes in samFile:"<<endl;
     cerr << "samtools view <bamFile> | ";
     cerr << argv[0] << " - "<<endl;
-    abort();
+	return 1;
 }
 
 
@@ -80,6 +80,7 @@ int readFile(const char* filename)
 int readStream()
 {
     int i = 0;
+	ios::sync_with_stdio(false);
     for (string line; getline(cin, line);)
     {
         if (line[0] != '@') 
@@ -98,6 +99,7 @@ int main(int argc, char *argv[])
     if (argc != 2)
     {
         usage(argv);
+		return 0;
     }
 
     // read lines
