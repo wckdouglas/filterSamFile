@@ -83,6 +83,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 	int A = 0, C = 0, T = 0, G = 0; 
 	int qual, j = 0, k = 0, l = 0;
 	int insertion = 0, deletion = 0, current = 0;
+	int refCount = 0;
     while (i < reads.length())
     {
 		readPos = reads.at(i);
@@ -141,6 +142,10 @@ int extractMismatches(string reads, string baseQuals, int cov,
 				{
 					T ++;
 				}
+				else if (readPos == '.')
+				{
+					refCount ++;
+				}
 			}
 			else
 			{
@@ -150,9 +155,12 @@ int extractMismatches(string reads, string baseQuals, int cov,
 		}
 		i++;
     }
-    printingTable(transcriptID, mispos, ref, cov, modifiedBase, 
-				A, C, T, G, insertion, deletion);
-	assert (A + T + G + C == cov);
+	if (refCount != cov)
+	{
+		printingTable(transcriptID, mispos, ref, cov, modifiedBase, 
+					A, C, T, G, insertion, deletion);
+		assert (A + T + G + C + refCount == cov);
+	}	
     return 0;
 }
 
