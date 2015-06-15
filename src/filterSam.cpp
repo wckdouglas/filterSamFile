@@ -16,20 +16,21 @@ typedef vector<string> stringList;
 typedef vector<int> numList;
 
 //split function to split line with desired deliminator
-stringList &split(const string &s, char delim, stringList &result) 
+stringList split(const string &s, char delim) 
 {
-        stringstream ss(s);
-        string item;
-        while (getline(ss, item, delim)) 
-        {
-                result.push_back(item);
-        }
-        return result;
+	stringList result; 
+    stringstream ss(s);
+    string item;
+    while (getline(ss, item, delim)) 
+    {
+        result.push_back(item);
+    }
+    return result;
 }
 
 
 // separate number and string
-int regexSeparate(string tag,numList &numberslists, stringList &letterlists)
+int regexSeparate(string tag, numList &numberslists, stringList &letterlists)
 {
     int i, current = 0, size = tag.length();
     string letters = "";
@@ -122,6 +123,7 @@ int pairedEndProcessLine(string line, int lineno, int headerline, stringList &sa
     //headers 
     if (line.at(0) == '@')
     {
+		ios::sync_with_stdio(false);
         cout << line << endl;
         headerline ++;
     }
@@ -130,8 +132,7 @@ int pairedEndProcessLine(string line, int lineno, int headerline, stringList &sa
         //filter each sam lines
         string id1, id2;
         int lineNum = lineno - headerline, passFlagTotal;
-        stringList columns;
-        split(line,'\t',columns);
+        stringList columns = split(line,'\t');
 
         //first in pair
         if (remainder(lineNum, 2) != 0)
@@ -157,6 +158,7 @@ int pairedEndProcessLine(string line, int lineno, int headerline, stringList &sa
             //print if both of them passed the filter
             //do not contain "notpass"
             passFlagTotal = accumulate(passFlags.begin(),passFlags.end(),0);
+			ios::sync_with_stdio(false);
             if (debugging == 0 && passFlagTotal == 2)
             {
                 cout << samlines[0] << endl;
@@ -180,6 +182,7 @@ int pairedStreamFile(double singleEndSoftclippedThreshold, double bothEndSoftcli
     int lineno = 0, headerline = 0;
     stringList samlines(2), ids(2);
     numList passFlags(2);
+	ios::sync_with_stdio(false);
     for ( string line ; getline(cin, line);)
     {
         lineno ++;
@@ -193,11 +196,12 @@ int singleStreamFile(double singleEndSoftclippedThreshold, double bothEndSoftcli
 {
     int pass;
 	int lineno = 0;
+	ios::sync_with_stdio(false);
     for ( string line ; getline(cin, line);)
     {
 		lineno ++;
-        stringList columns;
-        split(line,'\t',columns);
+        stringList columns = split(line,'\t');
+		ios::sync_with_stdio(false);
         if (line.at(0) == '@')
         {
             cout << line << endl;
