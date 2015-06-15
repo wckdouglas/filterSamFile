@@ -42,7 +42,7 @@ lists split(const string &s, char delim)
 
 //printing all variables
 int printingTable(string transcriptID, string mispos, string ref, 
-				int cov,//, string  modifiedBase, 
+				int cov, string  modifiedBase, 
 				int A, int C, int T, int G, 
 				int insertion, int deletion)
 {
@@ -74,7 +74,8 @@ int printingTable(string transcriptID, string mispos, string ref,
 
 // processing lines with mismatches 
 int extractMismatches(string reads, string baseQuals, int cov, 
-                    string transcriptID, string mispos, string ref)//,string modifiedBase)
+                    string transcriptID, string mispos, 
+					string ref, string modifiedBase)
 {
     string correctedReads; 
 	char readPos;
@@ -158,7 +159,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 
 // extract from each line different columns
 // and give them to further processing
-int processLine( lists columns)//seq_map seqIndex) 
+int processLine( lists columns, seq_map seqIndex) 
 {
     if (columns[2] != "N" && columns[2] != "." && columns[2] != "_")
     {
