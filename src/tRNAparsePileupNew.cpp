@@ -69,7 +69,7 @@ int printingTable(string transcriptID, string mispos, string ref,
 	cout << modifiedBase << "\t";
 	cout << A << "\t" << C << "\t";
 	cout << T << "\t" << G  << "\t" ;
-	cout << insertion << "\t" << deletion << "\t"<< endl;
+	cout << insertion << "\t" << deletion << "\t" << endl;
     return 0;
 }
 
@@ -81,36 +81,52 @@ int extractMismatches(string reads, string baseQuals, int cov,
     string correctedReads; 
 	char readPos;
     int start = 0, end = 0, i = 0;
-	int A = 0, C = 0, T = 0, G = 0; 
-	int qual, j = 0, k = 0, l = 0;
+	int A = 0, C = 0, T = 0, G = 0, N = 0; 
+	int qual, j = 0, k = 0, l = 0, trycount = 0;
 	int insertion = 0, deletion = 0, current = 0;
 	int refCount = 0;
     while (i < reads.length())
     {
 		readPos = reads.at(i);
         if (readPos == '+')
+		//insertion
         {
 			i ++ ; 
 			current = 0;
+			insertion ++;
 			while (isdigit(reads.at(i)))
 			{
 				current += current * 10 + (reads[i]-'0');
 				i++;
 			}
-            i += current - 1;
-			insertion += current;
+			if (current > 10)
+			{
+				i += current - 2;
+			}
+			else
+			{
+				i += current - 1;
+			}
         }
 		else if (readPos == '-')
+		// deletion
 		{
 			i ++ ; 
 			current = 0;
+			deletion ++;
 			while (isdigit(reads.at(i)))
 			{
 				current += current * 10 + (reads[i]-'0');
 				i++;
 			}
-            i += current - 1;
-			deletion += current;
+			if (current > 10)
+			{
+				i += current - 2;
+			}
+			else
+			{
+				i += current - 1;
+			}
 		}
         else if (readPos == '^')
         {
@@ -125,7 +141,12 @@ int extractMismatches(string reads, string baseQuals, int cov,
 		else 
 		{
             qual = baseQuals[j] - 33 ;
-			if (qual > qualThreshold && readPos != '*')
+			j++;
+			if (qual < qualThreshold || readPos == '*')
+			{
+				cov = cov - 1;
+			}
+			else 
 			{
 				if (readPos == 'A')
 				{	
@@ -143,16 +164,15 @@ int extractMismatches(string reads, string baseQuals, int cov,
 				{
 					T ++;
 				}
+				else if (readPos == 'N')
+				{
+					N ++;
+				}
 				else if (readPos == '.')
 				{
 					refCount ++;
 				}
 			}
-			else
-			{
-				cov --;
-			}
-			j++;
 		}
 		i++;
     }
@@ -161,7 +181,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 	{
 		printingTable(transcriptID, mispos, ref, cov, modifiedBase, 
 					A, C, T, G, insertion, deletion);
-		assert (A + T + G + C + refCount + deletion == cov);
+		assert (N + A + T + G + C + refCount + deletion == cov);
 	}	
     return 0;
 }
@@ -173,12 +193,12 @@ int processLine( lists columns, seq_map seqIndex, int qualThreshold, int coverag
 {
     if (columns[2] != "N" && columns[2] != "." && columns[2] != "_")
     {
-        string transcriptID, pos,ref,reads,baseQuals, modifiedBase;
+        string transcriptID, pos, ref, reads, baseQuals, modifiedBase;
         int cov;
         if (columns.size() == 6) 
         {
             cov = atoi(columns[3].c_str());
-            if (cov > 0)
+            if (cov > coverageThreshold)
             { 
                 transcriptID = columns[0];
                 pos = columns[1];
