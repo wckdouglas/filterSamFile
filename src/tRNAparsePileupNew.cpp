@@ -16,7 +16,8 @@ typedef vector <string> lists;
 //print usage 
 int usage(char *argv[])
 {
-    cerr << "usage: "<< argv[0] << " <filename>|<stdin> <modification reference fasta>" << endl;
+    cerr << "usage: "<< argv[0] << " <filename>|<stdin> <modification reference fasta> ";
+	cerr << "quality threshold> <coverage threshold>" << endl;
     cerr << endl;
     cerr << "Takes in mpileup result format:"<<endl;
     cerr << "samtools mpileup -f <ref.fa> <bamFile> | ";
@@ -75,7 +76,7 @@ int printingTable(string transcriptID, string mispos, string ref,
 // processing lines with mismatches 
 int extractMismatches(string reads, string baseQuals, int cov, 
                     string transcriptID, string mispos, 
-					string ref, string modifiedBase)
+					string ref, string modifiedBase, int qualThreshold, int coverageThreshold)
 {
     string correctedReads; 
 	char readPos;
@@ -124,7 +125,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 		else 
 		{
             qual = baseQuals[j] - 33 ;
-			if (qual > 33 && readPos != '*')
+			if (qual > qualThreshold && readPos != '*')
 			{
 				if (readPos == 'A')
 				{	
@@ -155,11 +156,12 @@ int extractMismatches(string reads, string baseQuals, int cov,
 		}
 		i++;
     }
-	if (refCount != cov)
+	cov += deletion;
+	if (cov > coverageThreshold && refCount != cov)
 	{
 		printingTable(transcriptID, mispos, ref, cov, modifiedBase, 
 					A, C, T, G, insertion, deletion);
-		assert (A + T + G + C + refCount == cov);
+		assert (A + T + G + C + refCount + deletion == cov);
 	}	
     return 0;
 }
@@ -167,7 +169,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 
 // extract from each line different columns
 // and give them to further processing
-int processLine( lists columns, seq_map seqIndex) 
+int processLine( lists columns, seq_map seqIndex, int qualThreshold, int coverageThreshold) 
 {
     if (columns[2] != "N" && columns[2] != "." && columns[2] != "_")
     {
@@ -185,7 +187,11 @@ int processLine( lists columns, seq_map seqIndex)
                 baseQuals = columns[5];
                 modifiedBase = seqIndex[transcriptID][atoi(pos.c_str()) - 1]  ;
                 assert ( baseQuals.length() == cov ) ;
-                extractMismatches(reads,baseQuals,cov, transcriptID,pos,ref, modifiedBase);
+				if (modifiedBase != "A" && modifiedBase != "C" && modifiedBase != "G" && modifiedBase != "T")
+				{
+					extractMismatches(reads, baseQuals, cov, transcriptID, 
+									pos, ref, modifiedBase, qualThreshold, coverageThreshold);
+				}
             }
         }
     }
@@ -196,14 +202,14 @@ int processLine( lists columns, seq_map seqIndex)
 // if lines are read from file,
 // this function takes in and open the file and 
 // parse it line by line
-int readFile(const char* filename, seq_map seqIndex)
+int readFile(const char* filename, seq_map seqIndex, int qualThreshold, int coverageThreshold)
 {
 	ios::sync_with_stdio(false);
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
         lists columns = split(line,'\t');
-        processLine(columns, seqIndex);
+        processLine(columns, seqIndex, qualThreshold, coverageThreshold);
     }
     return 0;
 }
@@ -211,13 +217,13 @@ int readFile(const char* filename, seq_map seqIndex)
 // if lines are read from stdin,
 // this function takes in and open the file and 
 // parse it line by line
-int readStream(seq_map seqIndex)
+int readStream(seq_map seqIndex, int qualThreshold, int coverageThreshold)
 {
 	ios::sync_with_stdio(false);
     for (string line; getline(cin, line);)
     {
         lists columns = split(line,'\t');
-        processLine(columns, seqIndex);
+        processLine(columns, seqIndex, qualThreshold, coverageThreshold);
     }
     return 0;
 }
@@ -238,7 +244,7 @@ int printHeader()
 int main(int argc, char *argv[])
 {
     // warnings
-    if (argc != 3)
+    if (argc != 5)
     {
         usage(argv);
     }
@@ -248,6 +254,7 @@ int main(int argc, char *argv[])
     ifstream fastaFile (modifiedFa);
     string id, line;
     lists seqList, idList;   
+	int qualThreshold, coverageThreshold;
 
     while ( getline(fastaFile,line) )
     {
@@ -262,7 +269,6 @@ int main(int argc, char *argv[])
             seqList.push_back(line);
         }
     }
-                
     seq_map seqIndex;
     for (int i = 0 ; i < seqList.size(); i++)
     {
@@ -270,15 +276,17 @@ int main(int argc, char *argv[])
     }
 
     printHeader();
+	qualThreshold = atoi(argv[3]);
+	coverageThreshold = atoi(argv[4]);
     // read lines
     if (strcmp(argv[1],"-") == 0)
     {
-        readStream(seqIndex);
+        readStream(seqIndex, qualThreshold, coverageThreshold);
     }
     else
     {
         const char* filename = argv[1];
-        readFile(filename,seqIndex);
+        readFile(filename,seqIndex, qualThreshold, coverageThreshold);
     }
     return 0;
 }
