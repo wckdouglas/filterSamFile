@@ -83,7 +83,7 @@ int printingTable(string transcriptID, string mispos, string ref,
 	cout << modifiedBase << "\t";
 	cout << A << "\t" << C << "\t";
 	cout << T << "\t" << G  << "\t" ;
-	cout << insertion << "\t" << deletion << "\t" << endl;
+	cout << insertion << "\t" << deletion << endl;
     return 0;
 }
 
