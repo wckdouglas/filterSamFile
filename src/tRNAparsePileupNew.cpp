@@ -26,6 +26,20 @@ int usage(char *argv[])
     abort();
 }
 
+int countDigits(int number) 
+{
+	if (number < 10) 
+	{
+		return 1;
+	}
+	int count = 0;
+	while (number > 0) 
+	{
+		number /= 10;
+		count++;
+	}
+	return count;
+}
 
 //split function to split line with desired deliminator
 lists split(const string &s, char delim) 
@@ -99,14 +113,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 				current += current * 10 + (reads[i]-'0');
 				i++;
 			}
-			if (current > 10)
-			{
-				i += current - 2;
-			}
-			else
-			{
-				i += current - 1;
-			}
+			i += current - countDigits(current);
         }
 		else if (readPos == '-')
 		// deletion
@@ -119,14 +126,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 				current += current * 10 + (reads[i]-'0');
 				i++;
 			}
-			if (current > 10)
-			{
-				i += current - 2;
-			}
-			else
-			{
-				i += current - 1;
-			}
+			i += current - countDigits(current);
 		}
         else if (readPos == '^')
         {
