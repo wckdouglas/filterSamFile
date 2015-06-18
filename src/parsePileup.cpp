@@ -5,6 +5,7 @@
 #include <string.h> 
 #include <ctype.h>
 #include <cstdlib>
+#include <cstdio>
 #include <fstream>
 #include <cassert>
 
@@ -115,7 +116,7 @@ int printingTable(string transcriptID, string mispos, string refbase, string cor
 
 // processing lines with mismatches 
 int extractMismatches(string reads, string baseQuals, int cov, 
-                    string transcriptID, string mispos, string refbase, int qualThreshold)
+                    string transcriptID, string mispos, string refbase, int qualThreshold, int &seqCount)
 {
     string correctedReads; 
     string skip;
@@ -134,25 +135,29 @@ int extractMismatches(string reads, string baseQuals, int cov,
 				current += current * 10 + (reads[i]-'0');
 				i++;
 			}
-			i += current - countDigits(current) + 1;
+			i += current - countDigits(current) ;
         }
         else if (readPos == '^')
         {
-            i += 2;
+            i ++;
             start = 1;
         }
         else if (readPos == '$')
         {
-            i ++ ;
             end = 1;
         }
-        else if (readPos != '<' && readPos != '>')
+        else
         {
             correctedReads.push_back(reads[i]);
-            i ++;
         }
+		i++;
     }
     assert (correctedReads.size() == cov);
+	seqCount ++;
+	if (seqCount > 1 && seqCount % 10000 == 0)
+	{
+		cerr << "Processed " << seqCount << " alignments" <<endl;
+	}
     printingTable(transcriptID, mispos, refbase, correctedReads, cov, baseQuals,start,end, qualThreshold);
     return 0;
 }
@@ -160,7 +165,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 
 // extract from each line different columns
 // and give them to further processing
-int processLine(stringList columns, int qualThreshold, int covThreshold) 
+int processLine(stringList columns, int qualThreshold, int covThreshold, int &seqCount) 
 {
     string transcriptID, pos, refbase, reads, baseQuals;
     int cov;
@@ -168,14 +173,14 @@ int processLine(stringList columns, int qualThreshold, int covThreshold)
     {
         cov = atoi(columns[3].c_str());
         refbase = columns[2];
-        if (cov > covThreshold && refbase != "N")
+        if (cov > covThreshold)
         { 
             transcriptID = columns[0];
             pos = columns[1];
             reads = columns[4];
             baseQuals = columns[5];
             assert (baseQuals.length() == cov) ;
-			extractMismatches(reads,baseQuals,cov, transcriptID,pos,refbase, qualThreshold);
+			extractMismatches(reads,baseQuals,cov, transcriptID,pos,refbase, qualThreshold, seqCount);
         }
     }
     return 0;
@@ -187,11 +192,12 @@ int processLine(stringList columns, int qualThreshold, int covThreshold)
 // parse it line by line
 int readFile(const char* filename,int qualThreshold, int covThreshold)
 {
+	int seqCount = 0;
 	ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
         stringList columns = split(line,'\t');
-        processLine(columns,qualThreshold, covThreshold);
+        processLine(columns,qualThreshold, covThreshold,seqCount);
     }
     return 0;
 }
@@ -201,10 +207,11 @@ int readFile(const char* filename,int qualThreshold, int covThreshold)
 // parse it line by line
 int readStream(int qualThreshold, int covThreshold)
 {
+	int seqCount = 0;
     for (string line; getline(cin, line);)
     {
         stringList columns = split(line,'\t');
-        processLine(columns, qualThreshold, covThreshold);
+        processLine(columns, qualThreshold, covThreshold,seqCount);
     }
     return 0;
 }
@@ -227,6 +234,7 @@ int printHeader()
 int main(int argc, char *argv[])
 {
 	ios::sync_with_stdio(false);
+	cout.sync_with_stdio(false);
     // warnings
     if (argc != 4)
     {
