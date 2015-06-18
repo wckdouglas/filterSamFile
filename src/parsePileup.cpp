@@ -19,7 +19,7 @@ int usage(char *argv[])
     cerr << "Takes in mpileup result format:"<<endl;
     cerr << "samtools mpileup -f <ref.fa> <bamFile> | ";
     cerr << argv[0] << " - "<<endl;
-    abort();
+	return 0;
 }
 
 
@@ -202,6 +202,7 @@ int main(int argc, char *argv[])
     if (argc != 2)
     {
         usage(argv);
+		return 0;
     }
 
     printHeader();

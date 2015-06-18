@@ -23,7 +23,7 @@ int usage(char *argv[])
     cerr << "samtools mpileup -f <ref.fa> <bamFile> | ";
     cerr << argv[0] << " - <modification reference fasta>"<<endl;
     cerr << endl;
-    abort();
+	return 0;
 }
 
 int countDigits(int number) 
@@ -267,6 +267,7 @@ int main(int argc, char *argv[])
     if (argc != 5)
     {
         usage(argv);
+		return 0;
     }
 
     // create modified RNA index
