@@ -59,22 +59,28 @@ int printingTable(string transcriptID, string mispos, string ref, string correct
     char strand;
     int qual;
     int i;
+	int flag = 0;
     for (i = 0 ; i < correctedReads.length(); i++)
     {
         read = correctedReads.at(i);
         if (read == 'A' || read == 'C' || read == 'T' || read == 'G')
         {
             strand = '+';
+			flag = 1;
         }
 		else if (read == 'a' || read == 'c' || read == 't' || read == 'g')
 		{
 			strand = '-';
+			flag = 1;
 		}
-        qual = baseQuals[i] - 33 ;
-		ios::sync_with_stdio(false);
-        cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
-        cout << read << "\t" << cov <<  "\t" << qual << "\t" ;
-        cout << strand << "\t" << start << "\t" << end << "\n";
+		if (flag == 1)
+		{
+			qual = baseQuals[i] - 33 ;
+			ios::sync_with_stdio(false);
+			cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
+			cout << read << "\t" << cov <<  "\t" << qual << "\t" ;
+			cout << strand << "\t" << start << "\t" << end << "\n";
+		}
     }
     return 0;
 }
