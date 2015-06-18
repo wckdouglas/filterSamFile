@@ -36,29 +36,20 @@ stringList split(const string &s, char delim)
         return result;
 }
 
-
-// given 3 char ouput the concatenate of the mas integer
-string insertionNum(char a, char b, char c)
+int countDigits(int number) 
 {
-    string number;
-    if (isdigit(c))
-    {
-        number.push_back(a);
-        number.push_back(b);
-        number.push_back(c);
-    }
-    else if (isdigit(b))
-    {
-        number.push_back(a);
-        number.push_back(b);
-    }
-    else
-    {
-        number.push_back(a);
-    }
-    return number;
+	if (number < 10) 
+	{
+		return 1;
+	}
+	int count = 0;
+	while (number > 0) 
+	{
+		number /= 10;
+		count++;
+	}
+	return count;
 }
-
 
 //printing all variables
 int printingTable(string transcriptID, string mispos, string ref, string correctedReads,
@@ -70,16 +61,20 @@ int printingTable(string transcriptID, string mispos, string ref, string correct
     int i;
     for (i = 0 ; i < correctedReads.length(); i++)
     {
-        read = correctedReads[i];
+        read = correctedReads.at(i);
         if (read == 'A' || read == 'C' || read == 'T' || read == 'G')
         {
             strand = '+';
-            qual = baseQuals[i] - 33 ;
-			ios::sync_with_stdio(false);
-            cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
-            cout << read << "\t" << cov <<  "\t" << qual << "\t" ;
-            cout << strand << "\t" << start << "\t" << end << endl;
         }
+		else if (read == 'a' || read == 'c' || read == 't' || read == 'g')
+		{
+			strand = '-';
+		}
+        qual = baseQuals[i] - 33 ;
+		ios::sync_with_stdio(false);
+        cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
+        cout << read << "\t" << cov <<  "\t" << qual << "\t" ;
+        cout << strand << "\t" << start << "\t" << end << "\n";
     }
     return 0;
 }
@@ -91,12 +86,21 @@ int extractMismatches(string reads, string baseQuals, int cov,
     string correctedReads; 
     string skip;
     int start = 0, end = 0, i = 0;
+	char readPos;
+	int current = 0;
     while (i < reads.length())
     {
+		readPos = reads.at(i);
         if (reads[i] == '+' || reads[i] == '-')
         {
-            skip = insertionNum(reads[i+1],reads[i+2],reads[i+3]);
-            i += (strtol(skip.c_str(),0,10) + skip.length()  + 1);
+			i ++ ; 
+			current = 0;
+			while (isdigit(reads.at(i)))
+			{
+				current += current * 10 + (reads[i]-'0');
+				i++;
+			}
+			i += current - countDigits(current);
         }
         else if (reads[i] == '^')
         {

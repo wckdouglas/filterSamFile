@@ -50,11 +50,11 @@ int printSeq(vector<string> columns, int i)
             abort();
         }
         i += 1;
-//        cout << "@" << id << endl;
-//        cout << sequence << endl;
-//        cout << "+" << endl;
-//        cout << qual << endl;
-		printf("@%s\n%s\n+\n%s\n",id.c_str(),sequence.c_str(),qual.c_str());
+		ios::sync_with_stdio(false);
+        cout << "@" << id << '\n';
+        cout << sequence << '\n';
+        cout << "+" << '\n';
+        cout << qual << '\n';
     }
     return i;
 }
