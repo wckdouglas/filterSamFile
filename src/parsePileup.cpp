@@ -84,7 +84,6 @@ int printingTable(string transcriptID, string mispos, string refbase, string cor
     int qual;
     int i;
 	int flag;
-	ios::sync_with_stdio(false);
     for (i = 0 ; i < correctedReads.length(); i++)
     {
 		qual = baseQuals[i] - 33 ;
@@ -202,7 +201,6 @@ int readFile(const char* filename,int qualThreshold, int covThreshold)
 // parse it line by line
 int readStream(int qualThreshold, int covThreshold)
 {
-	//ios::sync_with_stdio(false);
     for (string line; getline(cin, line);)
     {
         stringList columns = split(line,'\t');
@@ -228,6 +226,7 @@ int printHeader()
 // main function
 int main(int argc, char *argv[])
 {
+	ios::sync_with_stdio(false);
     // warnings
     if (argc != 4)
     {

@@ -158,7 +158,6 @@ int pairedEndProcessLine(string line, int lineno, int headerline, stringList &sa
             //print if both of them passed the filter
             //do not contain "notpass"
             passFlagTotal = accumulate(passFlags.begin(),passFlags.end(),0);
-			ios::sync_with_stdio(false);
             if (debugging == 0 && passFlagTotal == 2)
             {
                 cout << samlines[0] << endl;
@@ -182,7 +181,6 @@ int pairedStreamFile(double singleEndSoftclippedThreshold, double bothEndSoftcli
     int lineno = 0, headerline = 0;
     stringList samlines(2), ids(2);
     numList passFlags(2);
-	ios::sync_with_stdio(false);
     for ( string line ; getline(cin, line);)
     {
         lineno ++;
@@ -196,12 +194,10 @@ int singleStreamFile(double singleEndSoftclippedThreshold, double bothEndSoftcli
 {
     int pass;
 	int lineno = 0;
-	ios::sync_with_stdio(false);
     for ( string line ; getline(cin, line);)
     {
 		lineno ++;
         stringList columns = split(line,'\t');
-		ios::sync_with_stdio(false);
         if (line.at(0) == '@')
         {
             cout << line << endl;
@@ -244,6 +240,7 @@ int usage(char *program)
 
 int main(int argc, char **argv)
 {
+	ios::sync_with_stdio(false);
     int c;
     double singleEndSoftclippedThreshold = 0.3;
     double bothEndSoftclippedThreshold = 0.4;

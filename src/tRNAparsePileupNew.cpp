@@ -77,7 +77,6 @@ int printingTable(string transcriptID, string mispos, string ref,
     }
 
     // print lines
-	ios::sync_with_stdio(false);
     cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
     cout << cov << "\t"; 
 	cout << modifiedBase << "\t";
@@ -224,7 +223,6 @@ int processLine( lists columns, seq_map seqIndex, int qualThreshold, int coverag
 // parse it line by line
 int readFile(const char* filename, seq_map seqIndex, int qualThreshold, int coverageThreshold)
 {
-	ios::sync_with_stdio(false);
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
@@ -239,7 +237,6 @@ int readFile(const char* filename, seq_map seqIndex, int qualThreshold, int cove
 // parse it line by line
 int readStream(seq_map seqIndex, int qualThreshold, int coverageThreshold)
 {
-	ios::sync_with_stdio(false);
     for (string line; getline(cin, line);)
     {
         lists columns = split(line,'\t');
@@ -250,7 +247,6 @@ int readStream(seq_map seqIndex, int qualThreshold, int coverageThreshold)
 
 int printHeader()
 {
-	ios::sync_with_stdio(false);
     cout << "transcriptID" << "\t" ;
     cout << "mispos" << "\t";
     cout << "ref" << "\t";
@@ -263,6 +259,7 @@ int printHeader()
 // main function
 int main(int argc, char *argv[])
 {
+	ios::sync_with_stdio(false);
     // warnings
     if (argc != 5)
     {

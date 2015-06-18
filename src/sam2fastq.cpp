@@ -50,7 +50,6 @@ int printSeq(vector<string> columns, int i)
             abort();
         }
         i += 1;
-		ios::sync_with_stdio(false);
         cout << "@" << id << '\n';
         cout << sequence << '\n';
         cout << "+" << '\n';
@@ -80,7 +79,6 @@ int readFile(const char* filename)
 int readStream()
 {
     int i = 0;
-	ios::sync_with_stdio(false);
     for (string line; getline(cin, line);)
     {
         if (line[0] != '@') 
@@ -95,6 +93,7 @@ int readStream()
 
 int main(int argc, char *argv[])
 {
+	ios::sync_with_stdio(false);
     // warnings
     if (argc != 2)
     {
