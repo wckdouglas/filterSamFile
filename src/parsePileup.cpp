@@ -143,11 +143,11 @@ int processLine(stringList columns)
     if (columns.size() == 6) 
     {
         cov = atoi(columns[3].c_str());
-        if (cov > 0)
+        ref = columns[2];
+        if (cov > 0 && ref != "N")
         { 
             transcriptID = columns[0];
             pos = columns[1];
-            ref = columns[2];
             reads = columns[4];
             baseQuals = columns[5];
             assert (baseQuals.length() == cov) ;
