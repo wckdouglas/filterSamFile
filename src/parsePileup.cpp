@@ -14,7 +14,8 @@ typedef vector<string> stringList;
 //print usage 
 int usage(char *argv[])
 {
-    cerr << "usage: "<< argv[0] << " <filename>|<stdin> " << endl;
+    cerr << "usage: "<< argv[0] << " <filename>|<stdin> " ;
+	cerr << "<quality threshold> <covThreshold>" << endl;
     cerr << endl;
     cerr << "Takes in mpileup result format:"<<endl;
     cerr << "samtools mpileup -f <ref.fa> <bamFile> | ";
@@ -51,35 +52,63 @@ int countDigits(int number)
 	return count;
 }
 
-//printing all variables
-int printingTable(string transcriptID, string mispos, string ref, string correctedReads,
-                    int cov,string baseQuals,int start , int end)
+string basepair( string base)
 {
-    char read;
-    char strand;
+	string pairedBase;
+	assert (base.length() == 1);
+	if (base == "A")
+	{
+		pairedBase = "T"; 
+	}
+	else if (base == "C")
+	{
+		pairedBase = "G";
+	}
+	else if (base == "T")
+	{
+		pairedBase = "A";
+	}
+	else if (base == "G")
+	{
+		pairedBase = "C";
+	}
+	return pairedBase;
+}
+
+//printing all variables
+int printingTable(string transcriptID, string mispos, string refbase, string correctedReads,
+                    int cov,string baseQuals,int start , int end, int qualThreshold)
+{
+    char readbase = ' ';
+    char strand = ' ';
     int qual;
     int i;
-	int flag = 0;
+	int flag;
+	ios::sync_with_stdio(false);
     for (i = 0 ; i < correctedReads.length(); i++)
     {
-        read = correctedReads.at(i);
-        if (read == 'A' || read == 'C' || read == 'T' || read == 'G')
-        {
-            strand = '+';
-			flag = 1;
-        }
-		else if (read == 'a' || read == 'c' || read == 't' || read == 'g')
+		qual = baseQuals[i] - 33 ;
+		if (qual > qualThreshold)
 		{
-			strand = '-';
-			flag = 1;
-		}
-		if (flag == 1)
-		{
-			qual = baseQuals[i] - 33 ;
-			ios::sync_with_stdio(false);
-			cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
-			cout << read << "\t" << cov <<  "\t" << qual << "\t" ;
-			cout << strand << "\t" << start << "\t" << end << "\n";
+			flag = 0;
+			readbase = correctedReads.at(i);
+			if (readbase == 'A' || readbase == 'C' || readbase == 'T' || readbase == 'G')
+			{
+				strand = '+';
+				flag = 1;
+			}
+			else if (readbase == 'a' || readbase == 'c' || readbase == 't' || readbase == 'g')
+			{
+				strand = '-';
+				flag = 1;
+				refbase = basepair(refbase);
+			}
+			if (flag  == 1)
+			{
+				cout << transcriptID << "\t" << mispos << "\t" << refbase << "\t";
+				cout << readbase << "\t" << cov <<  "\t" << qual << "\t" ;
+				cout << strand << "\t" << start << "\t" << end << '\n';
+			}
 		}
     }
     return 0;
@@ -87,7 +116,7 @@ int printingTable(string transcriptID, string mispos, string ref, string correct
 
 // processing lines with mismatches 
 int extractMismatches(string reads, string baseQuals, int cov, 
-                    string transcriptID, string mispos, string ref)
+                    string transcriptID, string mispos, string refbase, int qualThreshold)
 {
     string correctedReads; 
     string skip;
@@ -106,52 +135,48 @@ int extractMismatches(string reads, string baseQuals, int cov,
 				current += current * 10 + (reads[i]-'0');
 				i++;
 			}
-			i += current - countDigits(current);
+			i += current - countDigits(current) + 1;
         }
-        else if (reads[i] == '^')
+        else if (readPos == '^')
         {
             i += 2;
             start = 1;
         }
-        else if (reads[i] == '$')
+        else if (readPos == '$')
         {
-            i += 1;
+            i ++ ;
             end = 1;
         }
-        else 
+        else if (readPos != '<' && readPos != '>')
         {
             correctedReads.push_back(reads[i]);
             i ++;
         }
     }
-    if (correctedReads.size() != cov)
-    {
-        cout << " wrong program parse mismatch strings!!\n " << endl;
-        abort();
-    }
-    printingTable(transcriptID, mispos, ref, correctedReads, cov, baseQuals,start,end);
+    assert (correctedReads.size() == cov);
+    printingTable(transcriptID, mispos, refbase, correctedReads, cov, baseQuals,start,end, qualThreshold);
     return 0;
 }
 
 
 // extract from each line different columns
 // and give them to further processing
-int processLine(stringList columns) 
+int processLine(stringList columns, int qualThreshold, int covThreshold) 
 {
-    string transcriptID, pos, ref, reads, baseQuals;
+    string transcriptID, pos, refbase, reads, baseQuals;
     int cov;
     if (columns.size() == 6) 
     {
         cov = atoi(columns[3].c_str());
-        ref = columns[2];
-        if (cov > 0 && ref != "N")
+        refbase = columns[2];
+        if (cov > covThreshold && refbase != "N")
         { 
             transcriptID = columns[0];
             pos = columns[1];
             reads = columns[4];
             baseQuals = columns[5];
             assert (baseQuals.length() == cov) ;
-			extractMismatches(reads,baseQuals,cov, transcriptID,pos,ref);
+			extractMismatches(reads,baseQuals,cov, transcriptID,pos,refbase, qualThreshold);
         }
     }
     return 0;
@@ -161,14 +186,13 @@ int processLine(stringList columns)
 // if lines are read from file,
 // this function takes in and open the file and 
 // parse it line by line
-int readFile(const char* filename)
+int readFile(const char* filename,int qualThreshold, int covThreshold)
 {
-	ios::sync_with_stdio(false);
-    ifstream myfile(filename);
+	ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
         stringList columns = split(line,'\t');
-        processLine(columns);
+        processLine(columns,qualThreshold, covThreshold);
     }
     return 0;
 }
@@ -176,13 +200,13 @@ int readFile(const char* filename)
 // if lines are read from stdin,
 // this function takes in and open the file and 
 // parse it line by line
-int readStream()
+int readStream(int qualThreshold, int covThreshold)
 {
-	ios::sync_with_stdio(false);
+	//ios::sync_with_stdio(false);
     for (string line; getline(cin, line);)
     {
         stringList columns = split(line,'\t');
-        processLine(columns);
+        processLine(columns, qualThreshold, covThreshold);
     }
     return 0;
 }
@@ -205,22 +229,25 @@ int printHeader()
 int main(int argc, char *argv[])
 {
     // warnings
-    if (argc != 2)
+    if (argc != 4)
     {
         usage(argv);
 		return 0;
     }
+	int qualThreshold = atoi(argv[2]);
+	int covThreshold = atoi(argv[3]);
 
     printHeader();
+
     // read lines
     if (strcmp(argv[1],"-") == 0)
     {
-        readStream();
+        readStream(qualThreshold, covThreshold);
     }
     else
     {
         const char* filename = argv[1];
-        readFile(filename);
+        readFile(filename,qualThreshold, covThreshold);
     }
     return 0;
 }
