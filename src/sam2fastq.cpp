@@ -35,7 +35,7 @@ stringList split(const string &s, char delim)
 }
 
 //process lines
-int printSeq(vector<string> columns, int i)
+int printSeq(stringList columns, int i)
 {
     string id, sequence, qual, chrom;
     chrom = columns[2];
