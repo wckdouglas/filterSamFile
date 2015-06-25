@@ -8,58 +8,32 @@
 #include <fstream>
 #include <map>
 #include <cassert>
+#include "stringManipulation.h"
+#include "pileupFix.h"
 
-using namespace std;
 typedef map<string, string> seq_map;
-typedef vector <string> lists;
 
 //print usage 
 int usage(char *argv[])
 {
     cerr << "usage: "<< argv[0] << " <filename>|<stdin> <modification reference fasta> ";
-	cerr << "quality threshold> <coverage threshold>" << endl;
+	cerr << "<quality threshold> <coverage threshold>" << endl;
     cerr << endl;
     cerr << "Takes in mpileup result format:"<<endl;
     cerr << "samtools mpileup -f <ref.fa> <bamFile> | ";
-    cerr << argv[0] << " - <modification reference fasta>"<<endl;
+    cerr << argv[0] << " - <modification reference fasta> ";
+	cerr << "<quality threshold> <coverage threshold>" << endl;
     cerr << endl;
 	return 0;
 }
 
-int countDigits(int number) 
-{
-	if (number < 10) 
-	{
-		return 1;
-	}
-	int count = 0;
-	while (number > 0) 
-	{
-		number /= 10;
-		count++;
-	}
-	return count;
-}
-
-//split function to split line with desired deliminator
-lists split(const string &s, char delim) 
-{
-        stringstream ss(s);
-        string item;
-		lists result;
-        while (getline(ss, item, delim)) 
-        {
-                result.push_back(item);
-        }
-        return result;
-}
 
 
 //printing all variables
 int printingTable(string transcriptID, string mispos, string ref, 
 				int cov, string  modifiedBase, 
 				int A, int C, int T, int G, 
-				int insertion, int deletion)
+				int insertion, int deletion, int refCount)
 {
     int i;
     // correct format for read data in R
@@ -82,7 +56,9 @@ int printingTable(string transcriptID, string mispos, string ref,
 	cout << modifiedBase << "\t";
 	cout << A << "\t" << C << "\t";
 	cout << T << "\t" << G  << "\t" ;
-	cout << insertion << "\t" << deletion << endl;
+	cout << insertion << "\t" << deletion;
+	//cout << "\t" << refCount;
+	cout <<'\n';
     return 0;
 }
 
@@ -91,96 +67,24 @@ int extractMismatches(string reads, string baseQuals, int cov,
                     string transcriptID, string mispos, 
 					string ref, string modifiedBase, int qualThreshold, int coverageThreshold)
 {
-    string correctedReads; 
-	char readPos;
     int start = 0, end = 0, i = 0;
 	int A = 0, C = 0, T = 0, G = 0, N = 0; 
-	int qual, j = 0, k = 0, l = 0, trycount = 0;
+	int a = 0, c = 0, t = 0, g = 0, n = 0; 
+	int qual;
 	int insertion = 0, deletion = 0, current = 0;
 	int refCount = 0;
-    while (i < reads.length())
-    {
-		readPos = reads.at(i);
-        if (readPos == '+')
-		//insertion
-        {
-			i ++ ; 
-			current = 0;
-			insertion ++;
-			while (isdigit(reads.at(i)))
-			{
-				current += current * 10 + (reads[i]-'0');
-				i++;
-			}
-			i += current - countDigits(current);
-        }
-		else if (readPos == '-')
-		// deletion
-		{
-			i ++ ; 
-			current = 0;
-			deletion ++;
-			while (isdigit(reads.at(i)))
-			{
-				current += current * 10 + (reads[i]-'0');
-				i++;
-			}
-			i += current - countDigits(current);
-		}
-        else if (readPos == '^')
-        {
-            i ++;
-            start = 1;
-        }
-        else if (readPos == '$')
-        {
-	        //i ++;
-            end = 1;
-        }
-		else 
-		{
-            qual = baseQuals[j] - 33 ;
-			j++;
-			if (qual < qualThreshold || readPos == '*')
-			{
-				cov = cov - 1;
-			}
-			else 
-			{
-				if (readPos == 'A')
-				{	
-					A ++;
-				}
-				else if (readPos == 'C')
-				{
-					C ++;
-				}
-				else if(readPos == 'G')
-				{
-					G ++;
-				}
-				else if (readPos == 'T')
-				{
-					T ++;
-				}
-				else if (readPos == 'N')
-				{
-					N ++;
-				}
-				else if (readPos == '.')
-				{
-					refCount ++;
-				}
-			}
-		}
-		i++;
-    }
+	fixpileup(A, C, T, G, N,
+			a, c, t, g, n,
+			deletion, insertion, reads, baseQuals,
+			qualThreshold, cov, refCount, start, end);
 	cov += deletion;
 	if (cov > coverageThreshold && refCount != cov)
 	{
 		printingTable(transcriptID, mispos, ref, cov, modifiedBase, 
-					A, C, T, G, insertion, deletion);
-		assert (N + A + T + G + C + refCount + deletion == cov);
+					A, C, T, G, insertion, deletion, refCount);
+		assert (N + A + T + G + C + 
+				a + c + t + g + n + 
+				refCount + deletion == cov);
 	}	
     return 0;
 }
@@ -188,7 +92,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 
 // extract from each line different columns
 // and give them to further processing
-int processLine( lists columns, seq_map seqIndex, int qualThreshold, int coverageThreshold) 
+int processLine( stringList columns, seq_map seqIndex, int qualThreshold, int coverageThreshold) 
 {
     if (columns[2] != "N" && columns[2] != "." && columns[2] != "_")
     {
@@ -226,7 +130,7 @@ int readFile(const char* filename, seq_map seqIndex, int qualThreshold, int cove
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
-        lists columns = split(line,'\t');
+        stringList columns = split(line,'\t');
         processLine(columns, seqIndex, qualThreshold, coverageThreshold);
     }
     return 0;
@@ -239,7 +143,7 @@ int readStream(seq_map seqIndex, int qualThreshold, int coverageThreshold)
 {
     for (string line; getline(cin, line);)
     {
-        lists columns = split(line,'\t');
+        stringList columns = split(line,'\t');
         processLine(columns, seqIndex, qualThreshold, coverageThreshold);
     }
     return 0;
@@ -271,7 +175,7 @@ int main(int argc, char *argv[])
     const char* modifiedFa = argv[2];
     ifstream fastaFile (modifiedFa);
     string id, line;
-    lists seqList, idList;   
+    stringList seqList, idList;   
 	int qualThreshold, coverageThreshold;
 
     while ( getline(fastaFile,line) )
@@ -279,7 +183,7 @@ int main(int argc, char *argv[])
         if (line.at(0) == '>')
         {
             id = line.erase(0,1);
-            lists seqid = split(id,' ');
+            stringList seqid = split(id,' ');
             idList.push_back(seqid[0]);
         }
         else

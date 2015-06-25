@@ -5,9 +5,9 @@
 #include <sstream>
 #include <vector>
 #include <string.h>
+#include "stringManipulation.h"
 
 using namespace std;
-typedef vector<string> stringList;
 
 //print usage 
 int usage(char *argv[])
@@ -20,19 +20,6 @@ int usage(char *argv[])
 	return 1;
 }
 
-
-//split function
-stringList split(const string &s, char delim)
-{
-    stringstream ss(s);
-    string item;
-	stringList result;
-    while (getline(ss, item, delim))
-    {
-        result.push_back(item);
-    }
-    return result;
-}
 
 //process lines
 int printSeq(stringList columns, int i)
@@ -50,10 +37,7 @@ int printSeq(stringList columns, int i)
             abort();
         }
         i += 1;
-        cout << "@" << id << '\n';
-        cout << sequence << '\n';
-        cout << "+" << '\n';
-        cout << qual << '\n';
+		printf("@%s\n%s\n+\n%s\n",id.c_str(),sequence.c_str(),qual.c_str());
     }
     return i;
 }

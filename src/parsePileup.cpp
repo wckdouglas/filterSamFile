@@ -8,9 +8,7 @@
 #include <cstdio>
 #include <fstream>
 #include <cassert>
-
-using namespace std;
-typedef vector<string> stringList;
+#include "stringManipulation.h"
 
 //print usage 
 int usage(char *argv[])
@@ -22,20 +20,6 @@ int usage(char *argv[])
     cerr << "samtools mpileup -f <ref.fa> <bamFile> | ";
     cerr << argv[0] << " - "<<endl;
 	return 0;
-}
-
-
-//split function to split line with desired deliminator
-stringList split(const string &s, char delim) 
-{
-        stringstream ss(s);
-        string item;
-		stringList result;
-        while (getline(ss, item, delim)) 
-        {
-                result.push_back(item);
-        }
-        return result;
 }
 
 int countDigits(int number) 
