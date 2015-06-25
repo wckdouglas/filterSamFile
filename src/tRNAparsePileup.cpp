@@ -8,10 +8,9 @@
 #include <fstream>
 #include <map>
 #include <cassert>
+#include "stringManipulation.h"
 
-using namespace std;
 typedef map<string, string> seq_map;
-typedef vector <string> lists;
 
 //print usage 
 int usage(char *argv[])
@@ -24,21 +23,6 @@ int usage(char *argv[])
     cerr << endl;
 	return 0;
 }
-
-
-//split function to split line with desired deliminator
-lists split(const string &s, char delim) 
-{
-        stringstream ss(s);
-        string item;
-		lists result;
-        while (getline(ss, item, delim)) 
-        {
-                result.push_back(item);
-        }
-        return result;
-}
-
 
 // given 3 char ouput the concatenate of the mas integer
 string insertionNum(char a, char b, char c)
@@ -140,7 +124,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 
 // extract from each line different columns
 // and give them to further processing
-int processLine( lists columns, seq_map seqIndex) 
+int processLine( stringList columns, seq_map seqIndex) 
 {
     if (columns[2] != "N" && columns[2] != "." && columns[2] != "_")
     {
@@ -174,7 +158,7 @@ int readFile(const char* filename, seq_map seqIndex)
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
-        lists columns = split(line,'\t');
+        stringList columns = split(line,'\t');
         processLine(columns, seqIndex);
     }
     return 0;
@@ -187,7 +171,7 @@ int readStream(seq_map seqIndex)
 {
     for (string line; getline(cin, line);)
     {
-        lists columns = split(line,'\t');
+        stringList columns = split(line,'\t');
         processLine(columns, seqIndex);
     }
     return 0;
@@ -220,14 +204,14 @@ int main(int argc, char *argv[])
     const char* modifiedFa = argv[2];
     ifstream fastaFile (modifiedFa);
     string id, line;
-    lists seqList, idList;   
+    stringList seqList, idList;   
 
     while ( getline(fastaFile,line) )
     {
         if (line.at(0) == '>')
         {
             id = line.erase(0,1);
-            lists seqid = split(id,' ');
+            stringList seqid = split(id,' ');
             idList.push_back(seqid[0]);
         }
         else
