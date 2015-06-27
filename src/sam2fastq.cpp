@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <string.h>
+#include <cassert>
 #include "stringManipulation.h"
 
 using namespace std;
@@ -22,7 +23,7 @@ int usage(char *argv[])
 
 
 //process lines
-int printSeq(vector<string> columns, int i)
+void printSeq(vector<string> columns, int &seqCount)
 {
     string id, sequence, qual, chrom;
     chrom = columns[2];
@@ -31,47 +32,38 @@ int printSeq(vector<string> columns, int i)
         id = columns[0];
         sequence = columns[9];
         qual = columns[10];
-        if (sequence.length() != qual.length())
-        {
-            cerr << "Wrong columns!!" << endl;
-            abort();
-        }
-        i += 1;
+        assert (sequence.length() == qual.length());
 		printf("@%s\n%s\n+\n%s\n",id.c_str(),sequence.c_str(),qual.c_str());
+        seqCount ++;
     }
-    return i;
 }
 
-int readFile(const char* filename)
+int readFile(const char* filename, int &seqCount)
 {
-    int i = 0;
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
         if (line[0] != '@') 
         {
             stringList columns = split(line,'\t');
-            i += printSeq(columns, i);
+            printSeq(columns, seqCount);
         }
     }
-    return i;
 }
 
 // if lines are read from stdin,
 // this function takes in and open the file and 
 // parse it line by line
-int readStream()
+int readStream(int &seqCount)
 {
-    int i = 0;
     for (string line; getline(cin, line);)
     {
         if (line[0] != '@') 
         {
             stringList columns = split(line,'\t');
-            i += printSeq(columns, i);
+            printSeq(columns, seqCount);
         }
     }
-    return i;
 }
 
 
@@ -86,16 +78,16 @@ int main(int argc, char *argv[])
     }
 
     // read lines
-    int i;
+    int seqCount;
     if (strcmp(argv[1],"-") == 0)
     {
-        i = readStream();
+        readStream(seqCount);
     }
     else
     {
         const char* filename = argv[1];
-        i = readFile(filename);
+        readFile(filename, seqCount);
     }
-    cerr << "Written "<< i <<" sequences." << endl;
+    cerr << "Written "<< seqCount <<" sequences." << endl;
     return 0;
 }
