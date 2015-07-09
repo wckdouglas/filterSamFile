@@ -13,7 +13,6 @@ filterSoftClipped:
 parsePileup:
 	$(cpp) src/parsePileup.cpp -o bin/parsePileup
 	$(cpp) src/tRNAparsePileup.cpp -o bin/tRNAparsePileup
-	$(cpp) src/tRNAparsePileupNew.cpp -o bin/tRNAparsePileupNew
 
 sam2fastq:
 	$(cpp) src/sam2fastq.cpp -o bin/sam2fastq
