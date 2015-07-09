@@ -112,22 +112,22 @@ void fixpileup(int &A,int &C, int &T, int &G, int &N,
         else if (readPos == '^')
         {
             i ++;
-			if (islower(reads.at(i+1)))
+			if (islower(reads.at(i+1)) || reads.at(i+1) == ',')
 			{
 				start ++;
 			}
-			else if (isupper(reads.at(i+1)))
+			else if (isupper(reads.at(i+1)) || reads.at(i+1) == '.')
 			{
 				end ++;
 			}
         }
         else if (readPos == '$')
         {
-			if (islower(reads.at(i+1)))
+			if (islower(reads.at(i-1)) || reads.at(i-1) == ',')
 			{
 				end ++;
 			}
-			else if (isupper(reads.at(i+1)))
+			else if (isupper(reads.at(i-1)) || reads.at(i-1) == '.')
 			{
 				start ++;
 			}
