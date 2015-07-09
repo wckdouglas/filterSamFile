@@ -52,13 +52,11 @@ int printingTable(string transcriptID, string mispos, string ref,
 
     // print lines
     cout << transcriptID << "\t" << mispos << "\t" << ref << "\t";
-    cout << cov + block<< "\t"; 
+    cout << cov << "\t"; 
 	cout << modifiedBase << "\t";
 	cout << A << "\t" << C << "\t";
 	cout << T << "\t" << G  << "\t" ;
-	cout << insertion << "\t" << deletion;
-	//cout << "\t" << block;
-	cout <<'\n';
+	cout << insertion << "\t" << deletion <<'\n';
     return 0;
 }
 
@@ -155,10 +153,8 @@ void printHeader()
     cout << "ref" << "\t";
     cout << "cov" << "\t";
     cout << "modifiedBase" << '\t';
-	cout << "A\tC\tT\tG\tinsertion" << '\t';
-	cout << "deletion" << '\t';
-	//cout << "block" ;
-	cout << '\n';
+	cout << "A\tC\tT\tG\tinsertion\t";
+	cout << "deletion" << '\n';
 }
 
 // main function
