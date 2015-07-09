@@ -65,7 +65,7 @@ int printingTable(string transcriptID, string mispos, string ref,
 // processing lines with mismatches 
 int extractMismatches(string reads, string baseQuals, int cov, 
                     string transcriptID, string mispos, 
-					string ref, string modifiedBase, int qualThreshold, int coverageThreshold, int &prePos, int &preEnd)
+					string ref, string modifiedBase, int qualThreshold, int coverageThreshold)
 {
     int start = 0, end = 0, i = 0;
 	int A = 0, C = 0, T = 0, G = 0, N = 0; 
@@ -74,21 +74,12 @@ int extractMismatches(string reads, string baseQuals, int cov,
 	int insertion = 0, deletion = 0, current = 0;
 	int refCount = 0;
 	int block;
-	if (prePos == atoi(mispos.c_str()) - 1 )
-	{
-		block = preEnd;
-	}
-	else
-	{
-		block = 0;
-	}
 	fixpileup(A, C, T, G, N,
 			a, c, t, g, n,
 			deletion, insertion, reads, baseQuals,
 			qualThreshold, cov, refCount, start, end);
 	cov += deletion;
-	if (modifiedBase != "A" && modifiedBase != "C" && modifiedBase != "G" 
-		&& modifiedBase != "T" && cov > coverageThreshold && refCount != cov)
+	if (cov > coverageThreshold && refCount != cov)
 	{
 		assert (N + A + T + G + C + 
 				a + c + t + g + n + 
@@ -96,15 +87,13 @@ int extractMismatches(string reads, string baseQuals, int cov,
 		printingTable(transcriptID, mispos, ref, cov, modifiedBase, 
 					A, C, T, G, insertion, deletion, refCount,block);
 	}	
-	preEnd = end;
-	prePos = atoi(mispos.c_str());
     return 0;
 }
 
 
 // extract from each line different columns
 // and give them to further processing
-int processLine( stringList columns, seq_map &seqIndex, int qualThreshold, int coverageThreshold, int &prePos, int &preEnd) 
+int processLine( stringList columns, seq_map &seqIndex, int qualThreshold, int coverageThreshold) 
 {
     if (columns[2] != "N" && columns[2] != "." && columns[2] != "_")
     {
@@ -115,13 +104,16 @@ int processLine( stringList columns, seq_map &seqIndex, int qualThreshold, int c
             cov = atoi(columns[3].c_str());
 			transcriptID = columns[0];
 			pos = columns[1];
-			ref = columns[2];
-			reads = columns[4];
-            baseQuals = columns[5];
             modifiedBase = seqIndex[transcriptID][atoi(pos.c_str()) - 1]  ;
-            assert ( baseQuals.length() == cov ) ;
-			extractMismatches(reads, baseQuals, cov, transcriptID, 
-							pos, ref, modifiedBase, qualThreshold, coverageThreshold, prePos, preEnd);
+			if (modifiedBase != "A" && modifiedBase != "C" && modifiedBase != "G" && modifiedBase != "T" && cov > coverageThreshold)
+			{
+				ref = columns[2];
+				reads = columns[4];
+				baseQuals = columns[5];
+				assert ( baseQuals.length() == cov ) ;
+				extractMismatches(reads, baseQuals, cov, transcriptID, 
+							pos, ref, modifiedBase, qualThreshold, coverageThreshold);
+			}
         }
     }
     return 0;
@@ -134,12 +126,10 @@ int processLine( stringList columns, seq_map &seqIndex, int qualThreshold, int c
 int readFile(const char* filename, seq_map &seqIndex, int qualThreshold, int coverageThreshold)
 {
     ifstream myfile(filename);
-	int prePos;
-	int preEnd;
     for (string line; getline(myfile, line);)
     {
         stringList columns = split(line,'\t');
-        processLine(columns, seqIndex, qualThreshold, coverageThreshold,prePos,preEnd);
+        processLine(columns, seqIndex, qualThreshold, coverageThreshold);
     }
     return 0;
 }
@@ -154,7 +144,7 @@ int readStream(seq_map &seqIndex, int qualThreshold, int coverageThreshold)
     for (string line; getline(cin, line);)
     {
         stringList columns = split(line,'\t');
-        processLine(columns, seqIndex, qualThreshold, coverageThreshold, prePos, preEnd);
+        processLine(columns, seqIndex, qualThreshold, coverageThreshold);
     }
     return 0;
 }
