@@ -33,7 +33,7 @@ int usage(char *argv[])
 int printingTable(string transcriptID, string mispos, string ref, 
 				int cov, string  modifiedBase, 
 				int A, int C, int T, int G, 
-				int insertion, int deletion, int refCount)
+				int insertion, int deletion, int refCount, int end)
 {
     int i;
     // correct format for read data in R
@@ -57,7 +57,7 @@ int printingTable(string transcriptID, string mispos, string ref,
 	cout << A << "\t" << C << "\t";
 	cout << T << "\t" << G  << "\t" ;
 	cout << insertion << "\t" << deletion;
-	//cout << "\t" << refCount;
+	cout << "\t" << end;
 	cout <<'\n';
     return 0;
 }
@@ -81,7 +81,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 	if (cov > coverageThreshold && refCount != cov)
 	{
 		printingTable(transcriptID, mispos, ref, cov, modifiedBase, 
-					A, C, T, G, insertion, deletion, refCount);
+					A, C, T, G, insertion, deletion, refCount,end);
 		assert (N + A + T + G + C + 
 				a + c + t + g + n + 
 				refCount + deletion == cov);
@@ -92,7 +92,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 
 // extract from each line different columns
 // and give them to further processing
-int processLine( stringList columns, seq_map seqIndex, int qualThreshold, int coverageThreshold) 
+int processLine( stringList columns, seq_map &seqIndex, int qualThreshold, int coverageThreshold) 
 {
     if (columns[2] != "N" && columns[2] != "." && columns[2] != "_")
     {
@@ -125,7 +125,7 @@ int processLine( stringList columns, seq_map seqIndex, int qualThreshold, int co
 // if lines are read from file,
 // this function takes in and open the file and 
 // parse it line by line
-int readFile(const char* filename, seq_map seqIndex, int qualThreshold, int coverageThreshold)
+int readFile(const char* filename, seq_map &seqIndex, int qualThreshold, int coverageThreshold)
 {
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
@@ -139,7 +139,7 @@ int readFile(const char* filename, seq_map seqIndex, int qualThreshold, int cove
 // if lines are read from stdin,
 // this function takes in and open the file and 
 // parse it line by line
-int readStream(seq_map seqIndex, int qualThreshold, int coverageThreshold)
+int readStream(seq_map &seqIndex, int qualThreshold, int coverageThreshold)
 {
     for (string line; getline(cin, line);)
     {
@@ -149,15 +149,15 @@ int readStream(seq_map seqIndex, int qualThreshold, int coverageThreshold)
     return 0;
 }
 
-int printHeader()
+void printHeader()
 {
     cout << "transcriptID" << "\t" ;
     cout << "mispos" << "\t";
     cout << "ref" << "\t";
     cout << "cov" << "\t";
     cout << "modifiedBase" << '\t';
-	cout << "A\tC\tT\tG\tinsertion\tdeletion" << endl;
-    return 0;
+	cout << "A\tC\tT\tG\tinsertion" << '\t';
+	cout << "deletion\tblock" << endl;
 }
 
 // main function
