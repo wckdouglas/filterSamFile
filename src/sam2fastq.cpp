@@ -38,7 +38,7 @@ void printSeq(vector<string> columns, int &seqCount)
     }
 }
 
-int readFile(const char* filename, int &seqCount)
+void readFile(const char* filename, int &seqCount)
 {
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
@@ -54,7 +54,7 @@ int readFile(const char* filename, int &seqCount)
 // if lines are read from stdin,
 // this function takes in and open the file and 
 // parse it line by line
-int readStream(int &seqCount)
+void readStream(int &seqCount)
 {
     for (string line; getline(cin, line);)
     {
