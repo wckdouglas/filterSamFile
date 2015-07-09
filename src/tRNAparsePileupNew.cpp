@@ -73,7 +73,6 @@ int extractMismatches(string reads, string baseQuals, int cov,
 	int qual;
 	int insertion = 0, deletion = 0, current = 0;
 	int refCount = 0;
-	int block;
 	fixpileup(A, C, T, G, N,
 			a, c, t, g, n,
 			deletion, insertion, reads, baseQuals,
@@ -85,7 +84,7 @@ int extractMismatches(string reads, string baseQuals, int cov,
 				a + c + t + g + n + 
 				refCount + deletion == cov);
 		printingTable(transcriptID, mispos, ref, cov, modifiedBase, 
-					A, C, T, G, insertion, deletion, refCount,block);
+					A, C, T, G, insertion, deletion, refCount,end);
 	}	
     return 0;
 }

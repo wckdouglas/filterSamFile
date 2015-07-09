@@ -112,11 +112,25 @@ void fixpileup(int &A,int &C, int &T, int &G, int &N,
         else if (readPos == '^')
         {
             i ++;
-            start ++;
+			if (islower(reads.at(i+1)))
+			{
+				start ++;
+			}
+			else if (isupper(reads.at(i+1)))
+			{
+				end ++;
+			}
         }
         else if (readPos == '$')
         {
-            end ++;
+			if (islower(reads.at(i+1)))
+			{
+				end ++;
+			}
+			else if (isupper(reads.at(i+1)))
+			{
+				start ++;
+			}
         }
 		else if (readPos == '<' || readPos == '>')
 		{
