@@ -26,7 +26,7 @@ void processing(string line, stringHash &junctionList)
 		int readStart = atoi(columns[1].c_str());
 		int readEnd = atoi(columns[2].c_str());
 		string strand = columns[5];
-		int initial = readStart - 1;
+		int initial = readStart;
 		int junctionStart, junctionEnd, junctionLength;
 		int junctionNumber;
 		numList cigarNum(0);
