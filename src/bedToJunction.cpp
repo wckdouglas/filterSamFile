@@ -85,7 +85,7 @@ void readStream(stringHash &junctionList)
 //usage
 void usage(char *argv[])
 {
-	cerr << "usage " << argv[0] << "<filename>|<stdin>"<< "\n\n";
+	cerr << "usage " << argv[0] << " <filename>|<stdin>"<< "\n\n";
 	cerr << "suggested usage: bamtobed -i <bamfile> -cigar | " << argv[0] << " - > junction.bed" << '\n';
 	cerr << "**** use <-> when using stdin" << '\n';
 	cerr << "Needed a bed file with cigar string" << '\n';
