@@ -21,4 +21,4 @@ pileup2bed:
 	$(cpp) src/pileup2bed.cpp -o bin/pileup2bed
 
 bedToJunction:
-	$(cpp) src/bedToJunction.cpp -o bin/bedToJunction
+	$(cpp) src/bedToJunction.cpp -o bin/bedToJunction -std=c++0x
