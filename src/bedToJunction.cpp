@@ -5,8 +5,8 @@
 #include <vector>
 #include <cassert>
 #include <iomanip>
+#include <cstring>
 #include <map>
-#include<unordered_set>
 
 #include "stringManipulation.h"
 
@@ -16,9 +16,14 @@ typedef map<string,int> stringHash;
 typedef map<string,int>::iterator it_hash;
 
 
-void processing(string line, stringHash &junctionList)
+int processing(string line, stringHash &junctionList)
 {
 	stringList columns = split(line,'\t');
+	if (columns.size() < 7)
+	{
+		cerr << "Input does not have 7 columns!! missing -cigar option?"<< endl;
+		return 1;
+	}
 	string cigar = columns[6];
 	if (cigar.find('N') != string::npos)
 	{
@@ -57,35 +62,48 @@ void processing(string line, stringHash &junctionList)
 			}
 		}
 	}
+	return 0;
 }
 
 // if lines are read from file,
 // this function takes in and open the file and 
 // parse it line by line
-void readFile(const char* filename, stringHash &junctionList)
+int readFile(const char* filename, stringHash &junctionList)
 {
+	int pass;
     ifstream myfile(filename);
     for (string line; getline(myfile, line);)
     {
-        processing(line,junctionList);
+        pass = processing(line,junctionList);
+		if (pass == 1)
+		{
+			return 1;
+		}
     }
+	return 0;
 }
 
 // if lines are read from stdin,
 // this function takes in and open the file and 
 // parse it line by line
-void readStream(stringHash &junctionList)
+int readStream(stringHash &junctionList)
 {
+	int pass;
     for (string line; getline(cin, line);)
     {
-        processing(line, junctionList);
+        pass = processing(line, junctionList);
+		if (pass == 1)
+		{
+			return 1;
+		}
     }
+	return 0;
 }
 
 //usage
 void usage(char *argv[])
 {
-	cerr << "usage " << argv[0] << "<filename>|<stdin>"<< "\n\n";
+	cerr << "usage " << argv[0] << " <filename>|<stdin>"<< "\n\n";
 	cerr << "suggested usage: bamtobed -i <bamfile> -cigar | " << argv[0] << " - > junction.bed" << '\n';
 	cerr << "**** use <-> when using stdin" << '\n';
 	cerr << "Needed a bed file with cigar string" << '\n';
@@ -108,7 +126,7 @@ int main(int argc, char *argv[])
 		usage(argv);
 		return 0;
 	}
-	int j = 0;
+	int j = 0,pass;
 	string key,chrom,start,end,strand;
 	stringHash junctionList;
 
@@ -116,16 +134,20 @@ int main(int argc, char *argv[])
     if (strcmp(argv[1],"-") == 0)
     {
 		cerr << "Reading from stdin" << endl;
-        readStream(junctionList);
+        pass = readStream(junctionList);
     }
     else
     {
         const char* filename = argv[1];
 		cerr << "Reading from: " << filename << endl;
-        readFile(filename,junctionList);
+        pass = readFile(filename,junctionList);
     }
 
 	//printing out bed file
+	if (pass == 1)
+	{
+		return 1;
+	}
 	for(it_hash iterator = junctionList.begin(); iterator != junctionList.end(); iterator++)
 	{
 		j ++;
@@ -141,5 +163,6 @@ int main(int argc, char *argv[])
 		cout << iterator->second << '\t';	// supported by how many reads
 		cout << strand << '\n' ;// strand
 	}
+	cerr << "Finished!! " << endl;
 	return 0;
 }
