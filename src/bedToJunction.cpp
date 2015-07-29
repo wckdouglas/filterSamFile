@@ -91,8 +91,8 @@ void usage(char *argv[])
 	cerr << "Needed a bed file with cigar string" << '\n';
 	cerr << "output file contains six columns: \n";
 	cerr << "          column 1:        chromosome name\n";
-	cerr << "          column 2:        junction start position (0-base start pos)\n";
-	cerr << "          column 3:        junction end position (0-base start pos)\n";
+	cerr << "          column 2:        junction start position (1-base start pos, same as bamfile)\n";
+	cerr << "          column 3:        junction end position (1-base start pos, same as bamfile)\n";
 	cerr << "          column 4:        name (ordered by chrom)\n";
 	cerr << "          column 5:        number of reads supporting\n";
 	cerr << "          column 6:        strand [+/-]\n";
