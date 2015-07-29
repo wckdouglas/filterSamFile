@@ -2,7 +2,7 @@ cpp=g++
 mkdir_p=mkdir -p
 
 
-all: directory filterSoftClipped parsePileup sam2fastq pileup2bed
+all: directory filterSoftClipped parsePileup sam2fastq pileup2bed bedToJunction
 
 directory:
 	$(mkdir_p) bin
@@ -19,3 +19,6 @@ sam2fastq:
 
 pileup2bed:
 	$(cpp) src/pileup2bed.cpp -o bin/pileup2bed
+
+bedToJunction:
+	$(cpp) src/bedToJunction.cpp -o bin/bedToJunction
