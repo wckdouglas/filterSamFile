@@ -19,38 +19,41 @@ typedef map<string,int>::iterator it_hash;
 void processing(string line, stringHash &junctionList)
 {
 	stringList columns = split(line,'\t');
-	string chrom = columns[0];
-	int readStart = atoi(columns[1].c_str());
-	int readEnd = atoi(columns[2].c_str());
-	string strand = columns[5];
 	string cigar = columns[6];
-	int initial = readStart - 1;
-	int junctionStart, junctionEnd, junctionLength;
-	int junctionNumber;
-	numList cigarNum(0);
-	stringList cigarStr(0);
-	regexSeparate(cigar,cigarNum,cigarStr);
-	int fracs = cigarNum.size();
-	numList cumCigarNum(fracs);
-	for (int i = 0; i < fracs ; i ++)
+	if (cigar.find('N') != string::npos)
 	{
-		initial = initial + cigarNum[i];
-		cumCigarNum[i] = initial;
-		if (cigarStr[i].compare("N")==0)
+		string chrom = columns[0];
+		int readStart = atoi(columns[1].c_str());
+		int readEnd = atoi(columns[2].c_str());
+		string strand = columns[5];
+		int initial = readStart - 1;
+		int junctionStart, junctionEnd, junctionLength;
+		int junctionNumber;
+		numList cigarNum(0);
+		stringList cigarStr(0);
+		regexSeparate(cigar,cigarNum,cigarStr);
+		int fracs = cigarNum.size();
+		numList cumCigarNum(fracs);
+		for (int i = 0; i < fracs ; i ++)
 		{
-			junctionNumber ++;
-			junctionStart = cumCigarNum[i-1];
-			junctionEnd = cumCigarNum[i];
-			junctionLength = junctionEnd - junctionStart; 
-			assert (junctionLength == cigarNum[i]);
-			string junctionRecord = chrom + "_" + to_string(junctionStart) + "_" + to_string(junctionEnd)+'_'+strand;
-			if (junctionList.find(junctionRecord) != junctionList.end())
+			initial = initial + cigarNum[i];
+			cumCigarNum[i] = initial;
+			if (cigarStr[i].compare("N")==0)
 			{
-				junctionList[junctionRecord] += 1;
-			}
-			else
-			{
-				junctionList[junctionRecord] = 1;
+				junctionNumber ++;
+				junctionStart = cumCigarNum[i-1];
+				junctionEnd = cumCigarNum[i];
+				junctionLength = junctionEnd - junctionStart; 
+				assert (junctionLength == cigarNum[i]);
+				string junctionRecord = chrom + "_" + to_string(junctionStart) + "_" + to_string(junctionEnd)+'_'+strand;
+				if (junctionList.find(junctionRecord) != junctionList.end())
+				{
+					junctionList[junctionRecord] += 1;
+				}
+				else
+				{
+					junctionList[junctionRecord] = 1;
+				}
 			}
 		}
 	}
