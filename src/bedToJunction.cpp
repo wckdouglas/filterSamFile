@@ -127,7 +127,8 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	int j = 0,pass;
-	string key,chrom,start,end,strand;
+	string key,chrom,strand;
+	int start,end;
 	stringHash junctionList;
 
 	//determine stdin or filename input
@@ -155,13 +156,13 @@ int main(int argc, char *argv[])
 		stringList info;
 		info = split(key,'_');
 		chrom = info[0];
-		start = info[1];
-		end = info[2];
+		start = atoi(info[1].c_str());
+		end = atoi(info[2].c_str());
 		strand = info[3];
 		cout << chrom << '\t' << start <<'\t' << end << '\t'; // chromosome name, start site, end site
 		cout <<	"JUNC" << setfill('0') << setw(10) << j << '\t'; // junction name
 		cout << iterator->second << '\t';	// supported by how many reads
-		cout << strand << '\n' ;// strand
+		cout << strand << '\t'<< end - start <<'\n' ;// strand
 	}
 	cerr << "Finished!! " << endl;
 	return 0;
