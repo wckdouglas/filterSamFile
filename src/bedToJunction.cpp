@@ -15,6 +15,42 @@ using namespace std;
 typedef map<string,int> stringHash;
 typedef map<string,int>::iterator it_hash;
 
+int readDef(string id)
+{
+    int read=0;
+    if (id.find("/2")!=string::npos)
+    {
+        read = 2;
+    }
+    else
+    {
+        read = 1;
+    }
+    return read;
+}
+
+string strandDef(string strand, string id)
+{
+    int read = readDef(id);
+    string newStrand;
+    if (read ==2)
+    {
+        if(strand.compare("+")==0)
+        {
+            newStrand = "-";
+        }
+        else
+        {
+            newStrand = "+";
+        }
+    } 
+    else
+    {
+        newStrand = strand;
+    }
+    return newStrand;
+}
+
 
 int processing(string line, stringHash &junctionList)
 {
@@ -28,9 +64,11 @@ int processing(string line, stringHash &junctionList)
 	if (cigar.find('N') != string::npos)
 	{
 		string chrom = columns[0];
+        string id = columns[3];
 		int readStart = atoi(columns[1].c_str());
 		int readEnd = atoi(columns[2].c_str());
-		string strand = columns[5];
+		string originalStrand = columns[5];
+        string strand = strandDef(originalStrand,id);
 		int initial = readStart;
 		int junctionStart, junctionEnd, junctionLength;
 		int junctionNumber;
