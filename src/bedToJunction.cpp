@@ -114,6 +114,7 @@ void usage(char *argv[])
 	cerr << "          column 4:        name (ordered by chrom)\n";
 	cerr << "          column 5:        number of reads supporting\n";
 	cerr << "          column 6:        strand [+/-]\n";
+	cerr << "          column 7:        junction distance\n";
 	cerr << endl;
 }
 
@@ -162,7 +163,7 @@ int main(int argc, char *argv[])
 		cout << chrom << '\t' << start <<'\t' << end << '\t'; // chromosome name, start site, end site
 		cout <<	"JUNC" << setfill('0') << setw(10) << j << '\t'; // junction name
 		cout << iterator->second << '\t';	// supported by how many reads
-		cout << strand << '\t'<< end - start <<'\n' ;// strand
+		cout << strand << '\t'<< end - start <<'\n' ;// strand and junction distance
 	}
 	cerr << "Finished!! " << endl;
 	return 0;
