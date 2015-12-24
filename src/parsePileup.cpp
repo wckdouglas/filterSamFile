@@ -40,6 +40,10 @@ int countDigits(int number)
 string basepair( string base)
 {
 	string pairedBase;
+    if (base.length()!=1)
+    {
+        cout << base << endl;
+    }
 	assert (base.length() == 1);
 	if (base == "A")
 	{
@@ -72,6 +76,7 @@ int printingTable(string transcriptID, string mispos, string refbase, string cor
     for (i = 0 ; i < correctedReads.length(); i++)
     {
 		qual = baseQuals[i] - 33 ;
+        assert(qual < 40);
 		if (qual > qualThreshold)
 		{
 			flag = 0;

@@ -9,9 +9,10 @@
 #include <map>
 #include <cassert>
 #include "stringManipulation.h"
-#include "pileupFix.h"
+#include "pileupFix2.h"
 
 typedef map<string, string> seq_map;
+typedef map<string, int> baseCounter;
 
 //print usage 
 int usage(char *argv[])
@@ -24,43 +25,40 @@ int usage(char *argv[])
     cerr << argv[0] << " - ";
 	cerr << "<quality threshold> <coverage threshold>" << endl;
     cerr << endl;
+    cerr << "** tested with samtools 1.3 only" << endl;
 	return 0;
 }
 
-
-
 //printing all variables
-void printTable(string transcriptID, string mispos, string ref, 
-				int cov, int A, int C, int T, int G, 
-				int a, int c, int t, int g,
-				int insertion, int deletion, int refCount)
+void printTable(string transcriptID, string mispos, string ref, int cov,
+				int insertion, int deletion, baseCounter counter)
 {
-    if (A + C + T + G > 0 )
-	{
-	    cout << transcriptID << "\t" ;
-		cout << mispos << "\t"; 
-		cout << atoi(mispos.c_str())+1 << '\t';
-		cout << ref << "\t";
-		cout << cov << "\t"; 
-		cout << '+' << "\t";
-		cout << A << "\t" << C << "\t";
-		cout << T << "\t" << G  << "\t" ;
-		cout << insertion << "\t" << deletion;
-		cout << '\n';
-	}
-	else if (a + c + t + g > 0)
-	{
-	    cout << transcriptID << "\t" ;
-		cout << mispos << "\t"; 
-		cout << atoi(mispos.c_str())+1 << '\t';
-		cout << ref << "\t";
-		cout << cov << "\t"; 
-		cout << '-' << "\t";
-		cout << a << "\t" << c << "\t";
-		cout << t << "\t" << g << "\t" ;
-		cout << insertion << "\t" << deletion;
-		cout << '\n';
-	}
+    int same = counter["A"] + counter["C"] + counter["G"] + counter["T"];
+    int reverse = counter["a"] + counter["c"] + counter["g"] + counter["t"];
+    if (same > 0){
+        cout << transcriptID << "\t" ;
+	    cout << mispos << "\t"; 
+	    cout << atoi(mispos.c_str())+1 << '\t';
+    	cout << ref << "\t";
+	    cout << cov << "\t"; 
+    	cout << '+' << "\t";
+	    cout << counter["A"] << "\t" << counter["C"] << "\t";
+    	cout << counter["T"] << "\t" << counter["G"] << "\t" ;
+    	cout << insertion << "\t" << deletion;
+	    cout << '\n';
+    }
+    if (reverse > 0){
+        cout << transcriptID << "\t" ;
+	    cout << mispos << "\t"; 
+	    cout << atoi(mispos.c_str())+1 << '\t';
+    	cout << reverseComplement(ref) << "\t";
+	    cout << cov << "\t"; 
+    	cout << '-' << "\t";
+	    cout << counter["a"] << "\t" << counter["c"] << "\t";
+    	cout << counter["t"] << "\t" << counter["g"] << "\t" ;
+    	cout << insertion << "\t" << deletion;
+	    cout << '\n';
+    }
 }
 
 // processing lines with mismatches 
@@ -69,25 +67,29 @@ void extractMismatches(string reads, string baseQuals, int cov,
 					string ref, int qualThreshold, int coverageThreshold)
 {
     int start = 0, end = 0, i = 0;
-	int A = 0, C = 0, T = 0, G = 0, N = 0; 
-	int a = 0, c = 0, t = 0, g = 0, n = 0; 
+    baseCounter counter;
+    counter["A"] = 0;
+    counter["C"] = 0;
+    counter["T"] = 0;
+    counter["G"] = 0;
+    counter["N"] = 0;
+    counter["a"] = 0;
+    counter["c"] = 0;
+    counter["t"] = 0;
+    counter["g"] = 0;
+    counter["n"] = 0;
 	int qual;
 	int insertion = 0, deletion = 0, current = 0;
-	int refCount = 0;
-	fixpileup(A, C, T, G, N,
-			a, c, t, g, n,
-			deletion, insertion, reads, baseQuals,
-			qualThreshold, cov, refCount, start, end);
-	cov = cov +  deletion - n - N;
-	
-	if (cov > coverageThreshold && refCount != cov)
+    string strand = "+";
+	fixpileup(counter, deletion, insertion, reads, baseQuals, 
+            ref, qualThreshold, cov, start, end);
+	cov = cov - counter["N"] - counter["n"];
+    assert(cov != counter["A"] + counter["C"] + counter["G"] + counter["T"] +
+            counter["a"] + counter["c"] + counter["g"] + counter["t"]);
+	if (cov > coverageThreshold)
 	{
 		printTable(transcriptID, mispos, ref, cov,  
-					A, C, T, G, a, c, t, g, 
-					insertion, deletion, refCount);
-		assert (A + T + G + C + 
-				a + c + t + g + 
-				refCount + deletion == cov);
+					insertion, deletion, counter);
 	}
 		
 }
@@ -97,7 +99,7 @@ void extractMismatches(string reads, string baseQuals, int cov,
 // and give them to further processing
 void processLine( stringList columns, int qualThreshold, int coverageThreshold) 
 {
-    if (columns[2] != "N" && columns[2] != "." && columns[2] != "_")
+    if (columns[2] != "N" && columns[2] != "." && columns[2] != "_" )
     {
         string transcriptID, pos, ref, reads, baseQuals;
         int cov;
