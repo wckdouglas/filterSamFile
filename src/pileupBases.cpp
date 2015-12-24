@@ -84,7 +84,7 @@ void extractMismatches(string reads, string baseQuals, int cov,
 	fixpileup(counter, deletion, insertion, reads, baseQuals, 
             ref, qualThreshold, cov, start, end);
 	cov = cov - counter["N"] - counter["n"];
-    assert(cov != counter["A"] + counter["C"] + counter["G"] + counter["T"] +
+    assert(cov == counter["A"] + counter["C"] + counter["G"] + counter["T"] +
             counter["a"] + counter["c"] + counter["g"] + counter["t"]);
 	if (cov > coverageThreshold)
 	{
