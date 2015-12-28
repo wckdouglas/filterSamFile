@@ -1,14 +1,17 @@
 cpp=g++
+sh=bash
 mkdir_p=mkdir -p
+include=./bamtools/include
+lib=./bamtools/lib
 
 
-all: directory filterSoftClipped parsePileup sam2fastq pileup2bed bedToJunction
+all: directory bamtools filterSoftClipped parsePileup sam2fastq pileup2bed bedToJunction
 
 directory:
 	$(mkdir_p) bin
 
 filterSoftClipped:
-	$(cpp)  src/filterSam.cpp -o bin/filterSoftClipped
+	$(cpp)  src/filterSam.cpp -o bin/filterSoftClipped  -I $(include) -L $(lib) -lbamtools
 
 parsePileup:
 	$(cpp) src/parsePileup.cpp -o bin/parsePileup

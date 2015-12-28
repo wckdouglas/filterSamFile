@@ -10,165 +10,69 @@
 #include <unistd.h>
 #include <ctype.h>
 #include "stringManipulation.h"
+#include "api/BamReader.h"
+#include "api/BamWriter.h"
+#include "api/BamAux.h"
 
+using namespace BamTools;
+using namespace std;
 
-int allClipped (numList cigarNumber, stringList cigarLetter)
+int processAlignment(BamAlignment aln, double singleThreshold, double bothThreshold)
 {
-    int totalClipped = 0;
-    for (int i = 0; i < cigarNumber.size(); i++)
-    {
-        if (cigarLetter.at(i) == "S")
-        {
-            totalClipped += cigarNumber[i];
-        }
-    }
-    return totalClipped;
+	int headClipped = 0, tailClipped = 0, totalClipped = 0;
+	int numberOfOperations = aln.CigarData.size();
+	int passedFlag = 1;
+	for (int i = 0; i < numberOfOperations ; i++)
+	{
+		const CigarOp& op = aln.CigarData.at(i);
+		if (op.Type == 'S')
+		{
+			if (i == 0)
+			{
+				headClipped = op.Length;
+			}
+			if (i == (numberOfOperations-1))
+			{
+				tailClipped = op.Length;
+			}
+			totalClipped = totalClipped + op.Length;
+		}
+	}
+	if (tailClipped < singleThreshold && headClipped < singleThreshold && totalClipped < bothThreshold)
+	{
+		passedFlag = 0;
+	}
+	return passedFlag;
 }
 
-int filter(stringList columns, double singleEndSoftclippedThreshold, double bothEndSoftclippedThreshold)
+int filterBam(double singleEndSoftclippedThreshold, double bothEndSoftclippedThreshold, int debugging, string inFile, string outFile)
 {
 
-    // define variables
-    numList cigarNumber;
-    stringList cigarLetter;
-    double thresholdBoth, thresholdSingle;
-    int cigarSize, seqLength, totalClip, passFlag = 1;
-    string cigar;
+	// opening inbam for reading bam
+	BamReader reader;
+	reader.Open(inFile);
+	const SamHeader header = reader.GetHeader();
+	const RefVector references = reader.GetReferenceData();	
 
-    //get elements from cigar string
-    cigar = columns[5];
-    regexSeparate(cigar, cigarNumber, cigarLetter);
-    cigarSize = cigarNumber.size();
-    seqLength = accumulate(cigarNumber.begin(),cigarNumber.end(),0);
+	// open out bam for writing alignment
+	BamWriter writer;
+	writer.Open(outFile, header, references);
 
-    //set threshold
-    thresholdSingle = seqLength * singleEndSoftclippedThreshold;
-    thresholdBoth = seqLength * bothEndSoftclippedThreshold;
-    
-    totalClip = allClipped(cigarNumber, cigarLetter);
-
-    //filtering, if passed, return line, else return 0
-    if (cigarLetter.at(0) == "S" )
-    {
-        if (cigarNumber[0] > thresholdSingle)
-        {
-            passFlag = 0;
-        }
-        else if (cigarLetter.at(cigarSize-1) == "S" && totalClip > thresholdBoth)
-        {
-            passFlag = 0;
-        }
-    }
-    else if (cigarLetter.at(cigarSize-1) == "S" )
-    {
-        if (cigarNumber[cigarSize-1] > thresholdSingle)
-        {
-            passFlag = 0;
-        }
-    }
-    return passFlag;
-}
-
-int pairedEndProcessLine(string line, int lineno, int headerline, stringList &samlines,
-                double singleEndSoftclippedThreshold, double bothEndSoftclippedThreshold,
-                stringList &ids, int debugging, numList &passFlags)
-{
-    //headers 
-    if (line.at(0) == '@')
-    {
-		ios::sync_with_stdio(false);
-        cout << line << endl;
-        headerline ++;
-    }
-    else
-    {
-        //filter each sam lines
-        string id1, id2;
-        int lineNum = lineno - headerline, passFlagTotal;
-        stringList columns = split(line,'\t');
-
-        //first in pair
-        if (remainder(lineNum, 2) != 0)
-        {
-            id1 = columns[0];
-            ids[0] = id1;
-            samlines[0] = line;
-            passFlags[0] = filter(columns, singleEndSoftclippedThreshold, bothEndSoftclippedThreshold);
-        }
-        //second in pair
-        else
-        {
-            id2 = columns[0];
-            ids[1] = id2;
-            samlines[1] = line;
-            if ( ids[0] != ids[1] ) 
-            {
-                cerr << "sam input is not sorted!!" << endl;
-                exit(EXIT_FAILURE);
-            }
-            passFlags[1] = filter(columns,singleEndSoftclippedThreshold, bothEndSoftclippedThreshold);
-
-            //print if both of them passed the filter
-            //do not contain "notpass"
-            passFlagTotal = accumulate(passFlags.begin(),passFlags.end(),0);
-            if (debugging == 0 && passFlagTotal == 2)
-            {
-                cout << samlines[0] << endl;
-                cout << samlines[1] << endl;
-            }
-            else if (debugging == 1 && passFlagTotal < 2)
-            {
-                cout << samlines[0] << endl;
-                cout << samlines[1] << endl;
-            }
-            stringList samlines(2);
-            stringList ids(2);
-            numList passFlags(2);
-        }
-    }
-    return 0;
-}
-
-int pairedStreamFile(double singleEndSoftclippedThreshold, double bothEndSoftclippedThreshold, int debugging)
-{
-    int lineno = 0, headerline = 0;
-    stringList samlines(2), ids(2);
-    numList passFlags(2);
-    for ( string line ; getline(cin, line);)
-    {
-        lineno ++;
-        pairedEndProcessLine(line, lineno, headerline, samlines, singleEndSoftclippedThreshold, bothEndSoftclippedThreshold, ids, debugging, passFlags);
-    }
-	cerr << "Parsed " << lineno << " lines " << endl;
-    return 0;
-}
-
-int singleStreamFile(double singleEndSoftclippedThreshold, double bothEndSoftclippedThreshold, int debugging)
-{
-    int pass;
-	int lineno = 0;
-    for ( string line ; getline(cin, line);)
-    {
-		lineno ++;
-        stringList columns = split(line,'\t');
-        if (line.at(0) == '@')
-        {
-            cout << line << endl;
-        }
-        else
-        {
-            pass = filter(columns, singleEndSoftclippedThreshold, bothEndSoftclippedThreshold);
-            if (pass != 0 && debugging == 0)
-            {
-                cout << line << endl;
-            }
-            else if (pass == 0 && debugging == 1)
-            {
-                cout << line << endl;
-            }
-        }
-    }
-	cerr << "Parse " << lineno  << " lines" << endl;
+	//parse alignment
+	
+	// construct alignment object 
+	BamAlignment aln;
+	while(reader.GetNextAlignmentCore(aln)){
+		int passedFlag = 1, seqLength = aln.Length;
+		double singleThreshold = singleEndSoftclippedThreshold * seqLength;
+		double bothThreshold = bothEndSoftclippedThreshold * seqLength;
+		passedFlag = processAlignment(aln, singleThreshold, bothThreshold);
+		
+		if ((passedFlag == 0 && debugging ==0) || (passedFlag == 1 && debugging ==1))
+		{
+			writer.SaveAlignment(aln);
+		}
+	}
     return 0;
 }
 
@@ -176,14 +80,15 @@ int usage(char *program)
 {
 	cerr << "****************************************************************" << '\n';
 	cerr << "Filtering soft clipped reads from paired-end RNA-seq sam files" << '\n';
-	cerr << "usage: cat <samFile> | " << program << " -s <oneSideSoftclipFractionThreshold> ";
-	cerr << "-b <bothEndSoftclippedThreshold> [-vp]" << "\n" << endl;
+	cerr << program << "-i <inbam> -o <outbam> -s <oneSideSoftclipFractionThreshold> ";
+	cerr << "-b <bothEndSoftclippedThreshold> [-v]" << "\n" << endl;
+	cerr << "<inbam>" << "\t" << "Bam file to be filtered (can be: - if stdin) "<< endl;
+	cerr << "<outbam>" << "\t" << "Bam file written to (can be: - if stdout) "<< endl;
 	cerr << "<oneSideSoftclipFractionThreshold>" << "\t" << "Threshold for filtering one side softclip sequence. "<< endl;
     cerr << "                                  " << "\t" << "Must be between 0 and 1 [default: 0.3]" << endl;
 	cerr << "<bothEndSoftclippedThreshold>     " << "\t" << "Threshold for filtering both side softclip sequence. "<< endl;
     cerr << "                                  " << "\t" << "Must be between 0 and 1 [default: 0.4]" << endl;
 	cerr << "-v                                " << "\t" << "Debugging mode: print out all failed alignments" << endl;
-	cerr << "-p                                " << "\t" << "paired-end mode [default = single end]" << endl;
 	cerr << "If the soft clipped bases count > (threshold * [whole sequence length]), it will be filter out" << endl;
 	cerr << "****************************************************************\n";
     cerr << endl;
@@ -199,25 +104,29 @@ int main(int argc, char **argv)
     double bothEndSoftclippedThreshold = 0.4;
     int debugging = 0, pairedEndFlag = 0;
     char *program = argv[0];
+	string outFile = "stdin", inputFile = "stdin";
     if (argc < 2)
     {
         usage(program);
     }
-    while ((c= getopt(argc, argv, "s:b:vp")) != -1)
+    while ((c= getopt(argc, argv, "i:s:b:o:v")) != -1)
     {
         switch(c)
         {
             case 's':
                 singleEndSoftclippedThreshold = atof(optarg);
                 break;
+            case 'i':
+                inputFile = optarg;
+                break;
+            case 'o':
+                outFile = optarg;
+                break;
             case 'b':
                 bothEndSoftclippedThreshold = atof(optarg);
                 break;
             case 'v':
                 debugging = 1;
-                break;
-            case 'p':
-                pairedEndFlag = 1;
                 break;
             case '?':
                 usage(program);
@@ -226,14 +135,16 @@ int main(int argc, char **argv)
                 usage(program);
         }
     }
-    if (pairedEndFlag == 1)
-    {
-        pairedStreamFile(singleEndSoftclippedThreshold,bothEndSoftclippedThreshold,debugging);
-    }
-    else
-    {
-        singleStreamFile(singleEndSoftclippedThreshold,bothEndSoftclippedThreshold,debugging);
-    }
+	if (strcmp("-",inputFile.c_str()) == 0)
+	{
+		inputFile = "stdin";
+	}
+	if (strcmp("-",outFile.c_str()) == 0)
+	{
+		outFile = "stdin";
+	}
+
+    filterBam(singleEndSoftclippedThreshold,bothEndSoftclippedThreshold,debugging, inputFile, outFile);
     return 0;
 }
     
