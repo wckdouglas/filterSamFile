@@ -1,15 +1,11 @@
 cpp=g++
 sh=bash
 mkdir_p=mkdir -p
-include=./bamtools/include
-lib=./bamtools/lib
-
-<<<<<<< HEAD
+bamtools=./bamtools
+include=$(bamtools)/include
+lib=$(bamtools)/lib
 
 all: directory bamtools filterSoftClipped parsePileup sam2fastq pileup2bed bedToJunction
-=======
-all: directory filterSoftClipped parsePileup sam2fastq pileup2bed bedToJunction pileup2base
->>>>>>> ce5cd3ad52483f36d47d64ffdad87c6ea6f961e0
 
 directory:
 	$(mkdir_p) ./bin
